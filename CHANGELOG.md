@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 — 2026-08-12
+
+- Added privacy-first usage measurement: an always-on aggregate counter (per-day,
+  per-endpoint-family, keyed vs anonymous, same-day unique estimate with a rotating
+  in-memory salt — raw IPs are never stored) exposed at `GET /api/usage`.
+- Added optional free API keys (`erx_…`, stateless HMAC) that attribute usage to a
+  subject and lift the per-IP rate limit up to a monthly ceiling. ERX stays fully
+  open: anonymous access is unchanged and nothing is ever paywalled.
+- Account status at `GET /api/my-usage`. Keyed totals optionally report to a
+  SaaSpress control plane in idempotent batches; unset `SAASPRESS_*` disables that.
+
 ## 1.0.0 — 2026-07-20
 
 - **تغيير كاسر:** توحيد بادئة كل أدوات MCP بـ `egypt_` لتفادي التصادم مع خوادم MCP أخرى

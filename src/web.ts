@@ -8,6 +8,7 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { exportResults, EXPORT_FORMATS, type ExportFormat } from "./exports.js";
 import { getLiveData, listLiveDatasets, checkLiveSources, LIVE_SOURCE_SLUGS, type LiveQuery, type LiveSourceSlug } from "./live-data.js";
 import { createMcpServer } from "./mcp.js";
+import { UsageCounter, usageOptionsFromEnv } from "./usage/counter.js";
 import { APP_JS, PRODUCT_CSS, brandSvg, docsView, landingView, llmsText, manifest, registryManifest, robots, sitemap, socialCardSvg, structuredData } from "./product.js";
 import { aboutPage, privacyPage, safetyPage, statusPage } from "./pages.js";
 import { LANDING_V2_CSS } from "./landing.js";
@@ -28,6 +29,11 @@ const READEX_PRO_LATIN_WOFF2 = readFileSync(new URL("../public/readex-pro-latin.
 
 export function createWebServer(store: ResearchStore, options: WebOptions = {}) {
   const limits = new Map<string, { window: number; count: number }>();
+  // Usage measurement: aggregate + anonymous always; an optional free key only
+  // attributes calls and lifts the anonymous rate limit. ERX is never paywalled.
+  const usagePromise = UsageCounter.create(usageOptionsFromEnv());
+  let usage: UsageCounter | undefined;
+  void usagePromise.then((counter) => { usage = counter; });
   const maximum = options.rateLimitPerMinute ?? Number(process.env["EGYPT_RESEARCH_RATE_LIMIT"] ?? 120);
   const trustProxy = options.trustProxy ?? process.env["EGYPT_RESEARCH_TRUST_PROXY"] === "true";
   const publicBaseUrl = normalizePublicBaseUrl(process.env["EGYPT_RESEARCH_PUBLIC_URL"]);
@@ -43,14 +49,38 @@ export function createWebServer(store: ResearchStore, options: WebOptions = {}) 
       response.setHeader("access-control-expose-headers", "x-request-id, etag, cache-control, x-ratelimit-limit, x-ratelimit-remaining, x-ratelimit-reset");
       if (request.method === "OPTIONS") { response.statusCode = 204; response.end(); return; }
     }
+    // Public transparency endpoint: aggregate counts only, CORS-open, never limited.
+    if (url.pathname === "/api/usage" && request.method === "GET") {
+      response.setHeader("access-control-allow-origin", "*");
+      json(response, 200, usage?.summary() ?? { total: 0, keyed: 0, anonymous: 0, uniqueToday: 0, topTools: [], days: [] });
+      return;
+    }
+
+    const apiKeyHeader = request.headers["x-api-key"];
+    const apiKey = (Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader)?.trim() || null;
+    const gate = usage ? await usage.gate(apiKey) : ({ keyed: false } as const);
+    const keyedActive = gate.keyed && !gate.overLimit;
+    const subject = keyedActive && gate.keyed ? gate.subject : null;
+
+    // Free-key account status (never counted against the caller).
+    if (url.pathname === "/api/my-usage" && request.method === "GET") {
+      if (!gate.keyed) { json(response, 401, { error: { code: "invalid_key", request_id: requestId } }); return; }
+      json(response, 200, { subject: gate.subject, used_this_month: usage?.usedThisMonth(gate.subject) ?? 0, over_limit: gate.overLimit });
+      return;
+    }
+
     if (apiPaths.some((prefix) => url.pathname.startsWith(prefix))) {
-      const rate = rateState(request, limits, maximum, trustProxy);
-      if (isApiV1) {
-        response.setHeader("x-ratelimit-limit", String(maximum));
-        response.setHeader("x-ratelimit-remaining", String(Math.max(0, maximum - rate.count)));
-        response.setHeader("x-ratelimit-reset", String(rate.reset));
+      // A valid free key rides its own monthly ceiling instead of the per-IP limit.
+      if (!keyedActive) {
+        const rate = rateState(request, limits, maximum, trustProxy);
+        if (isApiV1) {
+          response.setHeader("x-ratelimit-limit", String(maximum));
+          response.setHeader("x-ratelimit-remaining", String(Math.max(0, maximum - rate.count)));
+          response.setHeader("x-ratelimit-reset", String(rate.reset));
+        }
+        if (rate.blocked) { response.setHeader("retry-after", "60"); json(response, 429, { error: { code: "rate_limited", request_id: requestId } }); return; }
       }
-      if (rate.blocked) { response.setHeader("retry-after", "60"); json(response, 429, { error: { code: "rate_limited", request_id: requestId } }); return; }
+      usage?.record(usageLabel(url.pathname), subject, subject ?? clientAddress(request, trustProxy));
     }
     try {
       await route(store, request, response, url, options.includeMcp !== false, publicBaseUrl);
@@ -309,6 +339,18 @@ function rateState(request: IncomingMessage, limits: Map<string, { window: numbe
   const window = Math.floor(Date.now() / 60_000); const key = `${clientAddress(request, trustProxy)}:${window}`; const entry = limits.get(key); const reset = (window + 1) * 60;
   if (!entry) { limits.set(key, { window, count: 1 }); if (limits.size > 10_000) limits.clear(); return { blocked: false, count: 1, reset }; }
   const next = { ...entry, count: entry.count + 1 }; limits.set(key, next); return { blocked: next.count > maximum, count: next.count, reset };
+}
+
+/** Coarse label for the public usage counter: endpoint family, never query content. */
+function usageLabel(pathname: string): string {
+  if (pathname === "/mcp") return "mcp";
+  if (pathname.startsWith("/api/v1/")) {
+    const segment = pathname.slice("/api/v1/".length).split("/")[0] ?? "api";
+    return `api:${segment}`;
+  }
+  if (pathname.startsWith("/search")) return "search";
+  if (pathname.startsWith("/export")) return "export";
+  return "other";
 }
 
 function clientAddress(request: IncomingMessage, trustProxy: boolean): string {
