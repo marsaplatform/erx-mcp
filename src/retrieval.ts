@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { ResearchStore } from "./store.js";
-import { classifyDocument, normalizeArabic, tokenizeQuery } from "./text.js";
+import { classifyQuery, normalizeArabic, tokenizeQuery } from "./text.js";
 import type { SearchOptions, SearchResult } from "./types.js";
 
 const conceptGroups = [
@@ -117,7 +117,7 @@ export class HybridRetriever {
       scores.set(documentId, (scores.get(documentId) ?? 0) + SEMANTIC_WEIGHT * similarity / (RRF_K + index + 1));
       (reasons.get(documentId) ?? reasons.set(documentId, new Set()).get(documentId))!.add("semantic");
     });
-    const queryTopics = new Set(classifyDocument(query));
+    const queryTopics = new Set(classifyQuery(query));
     const minimumTokenMatches = Math.max(1, Math.ceil(queryTokens.length * 0.5));
     return [...scores.entries()].flatMap(([documentId, score]) => {
       const document = this.store.getDocument(documentId);

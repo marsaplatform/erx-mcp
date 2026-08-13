@@ -78,6 +78,8 @@ export function expandArabicSearchToken(value: string): string[] {
   else if (token.startsWith("لل") && token.length > 4) articleForm = token.slice(1);
   const bare = articleForm.startsWith("ال") && articleForm.length > 4 ? articleForm.slice(2) : articleForm;
   const bareForms = new Set([bare]);
+  // «لل» تحتمل قراءتين: لـ + ال (للأجور ← أجور)، أو لـ + اسم يبدأ بلام (للاجئين ← لاجئين). نولّد الاثنتين.
+  if (token.startsWith("لل") && token.length > 4) bareForms.add(token.slice(2));
   if ((bare.endsWith("ون") || bare.endsWith("ين")) && bare.length > 4) {
     const stem = bare.slice(0, -2);
     bareForms.add(`${stem}ون`);
@@ -97,6 +99,10 @@ export function expandArabicSearchToken(value: string): string[] {
 export function classifyDocument(value: string): string[] {
   const normalized = normalizeArabic(value);
   return TOPICS.filter((topic) => topicKeywords[topic].some((keyword) => normalized.includes(normalizeArabic(keyword))));
+}
+
+export function classifyQuery(value: string): string[] {
+  return classifyDocument(tokenizeQuery(value).flatMap(expandArabicSearchToken).join(" "));
 }
 
 export function isNonResearchContent(value: string): boolean {

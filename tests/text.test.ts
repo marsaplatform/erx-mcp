@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { classifyDocument, expandArabicSearchToken, isNonResearchContent, isOutOfScopeContent, normalizeArabic, tokenizeQuery } from "../src/text.js";
+import { classifyDocument, classifyQuery, expandArabicSearchToken, isNonResearchContent, isOutOfScopeContent, normalizeArabic, tokenizeQuery } from "../src/text.js";
 
 describe("Arabic text helpers", () => {
   it("normalizes Arabic variants and removes diacritics", () => {
@@ -20,6 +20,26 @@ describe("Arabic text helpers", () => {
     expect(expandArabicSearchToken("باللاجئين")).toEqual(expect.arrayContaining(["باللاجيين", "اللاجيين", "لاجيين"]));
     expect(expandArabicSearchToken("قضية")).toContain("قضايا");
     expect(expandArabicSearchToken("قضايا")).toContain("قضيه");
+  });
+
+  it("expands the لل prefix into the bare noun and its definite form", () => {
+    expect(expandArabicSearchToken("للأجور")).toEqual(expect.arrayContaining(["اجور", "الاجور"]));
+    expect(expandArabicSearchToken("للمسجونين")).toEqual(expect.arrayContaining(["مسجونين", "المسجونين"]));
+  });
+
+  it("keeps stripping the و ف ب ك conjunction before the article", () => {
+    for (const token of ["وال", "فال", "بال", "كال"].map((prefix) => `${prefix}أجور`)) {
+      expect(expandArabicSearchToken(token)).toEqual(expect.arrayContaining(["اجور", "الاجور"]));
+    }
+  });
+
+  it("keeps the reading where the noun itself begins with lam", () => {
+    expect(expandArabicSearchToken("للاجئين")).toEqual(expect.arrayContaining(["لاجيين", "اللاجيين"]));
+  });
+
+  it("classifies a query topic through the same prefix expansion as documents", () => {
+    expect(classifyQuery("الحد الأدنى للأجور")).toContain("الاقتصاد والعدالة الاجتماعية");
+    expect(classifyQuery("قرار المحكمة الدستورية بشأن القانون")).toContain("القضاء والمحاكمات");
   });
 
   it("classifies legal and human-rights material", () => {
