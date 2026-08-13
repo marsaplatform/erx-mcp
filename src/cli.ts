@@ -40,7 +40,7 @@ const output = (payload: unknown): void => { process.stdout.write(`${typeof payl
 
 async function main(argv = process.argv.slice(2)): Promise<number> {
   const args = parse(argv);
-  if (!args.command || args.flags.has("help")) { output("Usage: egypt-research <init|seed|prune-sources|ingest|audit-sources|index|reclassify|rebuild-stories|rebuild-events|status|dataset-dump|backup|verify-backup|restore|serve> [options]"); return args.command ? 0 : 2; }
+  if (!args.command || args.flags.has("help")) { output("Usage: egypt-research <init|seed|prune-sources|ingest|audit-sources|index|reclassify|rebuild-stories|rebuild-events|restore-excluded|health|status|dataset-dump|backup|verify-backup|restore|serve> [options]"); return args.command ? 0 : 2; }
   if (args.command === "verify-backup") { const input = value(args, "input"); output({ status: verifyBackup(input), backup: input }); return 0; }
   if (args.command === "backup") {
     const destination = value(args, "output", `backups/research-${new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")}.db`);
