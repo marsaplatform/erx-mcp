@@ -504,6 +504,23 @@ export class ResearchStore {
     return (this.db.prepare("SELECT id FROM documents ORDER BY id LIMIT ?").all(clamp(limit, 1, 100_000)) as Row[]).map((row) => asNumber(row["id"]));
   }
 
+  // عكس reclassifyDocuments: بيراجع المستبعدين بالقواعد الحالية ويرجّع اللي اتغير حكمه.
+  // ملاحظة: الاستبعاد بيكتب فوق document_type فالنوع الأصلي ضايع — المستعاد بيرجع "article".
+  // الكيانات والادعاءات والأحداث لازم تتعاد فهرستها بعد الاستدعاء ده (KnowledgeIndexer.backfill).
+  restoreExcludedDocuments(): { restored: number; stillExcluded: number } {
+    let restored = 0;
+    for (const documentId of this.listDocumentIds(100_000)) {
+      const document = this.getDocument(documentId);
+      if (!document || document.documentType !== "excluded") continue;
+      const corpusText = `${document.title}\n${document.excerpt}\n${document.content ?? ""}`;
+      if (isNonResearchContent(corpusText) || isOutOfScopeContent(`${document.title}\n${document.excerpt}`)) continue;
+      this.db.prepare("UPDATE documents SET document_type='article', updated_at=? WHERE id=?").run(now(), documentId);
+      this.assignStory(documentId);
+      restored += 1;
+    }
+    return { restored, stillExcluded: this.countExcludedDocuments() };
+  }
+
   reclassifyDocuments(): { excluded: number; searchable: number } {
     let excluded = 0;
     for (const documentId of this.listDocumentIds(100_000)) {

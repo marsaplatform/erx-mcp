@@ -68,6 +68,12 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
     const result = { ...store.reclassifyDocuments(), topics: store.backfillDocumentTopics(), ...store.rebuildStories() };
     output({ status: "ok", ...result }); store.close(); return 0;
   }
+  if (args.command === "restore-excluded") {
+    const restored = store.restoreExcludedDocuments();
+    const reports = restored.restored ? new KnowledgeIndexer(store).backfill(100_000) : [];
+    output({ status: "ok", ...restored, reindexed: reports.length });
+    store.close(); return 0;
+  }
   if (args.command === "rebuild-stories") {
     output({ status: "ok", ...store.rebuildStories() }); store.close(); return 0;
   }
