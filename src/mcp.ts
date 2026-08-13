@@ -77,14 +77,19 @@ function liveQuery(input: { source: LiveQuery["source"]; indicator?: string | un
   };
 }
 
-function buildResearchDossier(store: ResearchStore, query: string, results: ReturnType<ResearchStore["search"]>) {
+const DOSSIER_SECTIONS = ["results", "timeline", "entities", "claims"] as const;
+type DossierSection = (typeof DOSSIER_SECTIONS)[number];
+const DOSSIER_SECTION_LIMIT = 40;
+const DOSSIER_EXCERPT_LIMIT = 400;
+
+function buildResearchDossier(store: ResearchStore, query: string, results: ReturnType<ResearchStore["search"]>, include: readonly DossierSection[] = DOSSIER_SECTIONS) {
   const sourceTypes: Record<string, number> = {};
   const entities = new Map<number, ReturnType<ResearchStore["listEntities"]>[number]>();
   const claims = new Map<number, ReturnType<ResearchStore["listClaims"]>[number]>();
   for (const result of results) {
     sourceTypes[result.sourceType] = (sourceTypes[result.sourceType] ?? 0) + 1;
-    for (const entity of store.listEntities({ documentId: result.documentId, limit: 100 })) entities.set(entity.id, entity);
-    for (const claim of store.listClaims({ documentId: result.documentId, limit: 100 })) claims.set(claim.id, claim);
+    if (include.includes("entities")) for (const entity of store.listEntities({ documentId: result.documentId, limit: 100 })) entities.set(entity.id, entity);
+    if (include.includes("claims")) for (const claim of store.listClaims({ documentId: result.documentId, limit: 100 })) claims.set(claim.id, claim);
   }
   const dates = results.map((result) => result.eventAt ?? result.publishedAt ?? result.archivedAt).sort();
   const timeline = results.map((result) => ({
@@ -93,8 +98,15 @@ function buildResearchDossier(store: ResearchStore, query: string, results: Retu
     dateBasis: result.eventAt ? "event_at" : result.publishedAt ? "published_at" : "archived_at",
     title: result.title,
     sourceName: result.sourceName,
-    citation: result.citation
+    // الاستشهاد موجود في results لنفس الوثيقة — documentId كفاية للربط
   })).sort((left, right) => left.occurredAt.localeCompare(right.occurredAt));
+  const truncate = (value: string, max: number) => value.length > max ? `${value.slice(0, max)}…` : value;
+  const sections = {
+    results: results.map((result) => ({ ...result, excerpt: truncate(result.excerpt, DOSSIER_EXCERPT_LIMIT), excerptTruncated: result.excerpt.length > DOSSIER_EXCERPT_LIMIT })),
+    timeline,
+    entities: [...entities.values()].sort((left, right) => right.documentCount - left.documentCount).slice(0, DOSSIER_SECTION_LIMIT),
+    claims: [...claims.values()].sort((left, right) => right.lastSeenAt.localeCompare(left.lastSeenAt)).slice(0, DOSSIER_SECTION_LIMIT)
+  };
   return {
     query,
     coverage: {
@@ -102,12 +114,11 @@ function buildResearchDossier(store: ResearchStore, query: string, results: Retu
       sourceCount: new Set(results.map((result) => result.sourceSlug)).size,
       sourceTypes,
       firstDate: dates[0] ?? null,
-      lastDate: dates.at(-1) ?? null
+      lastDate: dates.at(-1) ?? null,
+      entityCount: entities.size,
+      claimCount: claims.size
     },
-    results: results.map((result) => ({ ...result, excerpt: result.excerpt.slice(0, 800) })),
-    timeline,
-    entities: [...entities.values()].sort((left, right) => right.documentCount - left.documentCount),
-    claims: [...claims.values()].sort((left, right) => right.lastSeenAt.localeCompare(left.lastSeenAt))
+    ...Object.fromEntries(DOSSIER_SECTIONS.filter((section) => include.includes(section)).map((section) => [section, sections[section]]))
   };
 }
 
@@ -196,10 +207,11 @@ export function createMcpServer(store: ResearchStore, options: McpOptions = {}):
   });
 
   server.registerTool("egypt_research_dossier", { description: "حزمة بحث موثقة تجمع البحث الهجين والنتائج والخط الزمني والكيانات والادعاءات وتنوع المصادر.", inputSchema: {
-    query: z.string().min(1), source_types: z.array(z.enum(SOURCE_TYPES)).optional(), date_from: z.string().optional(), date_to: z.string().optional(), limit: z.number().int().min(1).max(50).default(20)
-  }, outputSchema: { query: z.string(), coverage: item(), results: items(), timeline: items(), entities: items(), claims: items() }, annotations: readOnly }, ({ query, source_types, date_from, date_to, limit }) => {
+    query: z.string().min(1), source_types: z.array(z.enum(SOURCE_TYPES)).optional(), date_from: z.string().optional(), date_to: z.string().optional(), limit: z.number().int().min(1).max(50).default(20),
+    include: z.array(z.enum(DOSSIER_SECTIONS)).min(1).optional()
+  }, outputSchema: { query: z.string(), coverage: item(), results: items().optional(), timeline: items().optional(), entities: items().optional(), claims: items().optional() }, annotations: readOnly }, ({ query, source_types, date_from, date_to, limit, include }) => {
     const results = new HybridRetriever(store).search(query, { limit, ...(source_types ? { sourceTypes: source_types } : {}), ...(date_from ? { dateFrom: date_from } : {}), ...(date_to ? { dateTo: date_to } : {}) });
-    return toolResult(buildResearchDossier(store, query, results));
+    return toolResult(buildResearchDossier(store, query, results, include ?? DOSSIER_SECTIONS));
   });
 
   server.registerTool("egypt_find_entities", { description: "عرض الكيانات المستخرجة وأعداد ظهورها في الوثائق مع ترقيم عبر offset.", inputSchema: { document_id: z.number().int().positive().optional(), limit: z.number().int().min(1).max(500).default(100), offset: z.number().int().min(0).default(0) }, outputSchema: { ...pageShape, entities: items() }, annotations: readOnly }, ({ document_id, limit, offset }) => {
