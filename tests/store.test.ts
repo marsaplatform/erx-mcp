@@ -1,6 +1,7 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 
 import { bootstrapCatalog } from "../src/catalog.js";
@@ -227,6 +228,48 @@ describe("ResearchStore", () => {
     expect(story?.["sourceCount"]).toBe(2);
     expect(story?.["independent"]).toBe(true);
     expect(store.listStories(1)[0]?.["independent"]).toBe(true);
+    store.close();
+  });
+
+  it("restores documents the noise filter no longer excludes", () => {
+    const path = join(mkdtempSync(join(tmpdir(), "erx-restore-")), "research.db");
+    const store = new ResearchStore(path);
+    store.initialize();
+    store.upsertSource(source);
+    const document = store.upsertDocument({
+      externalId: "restore:1", sourceSlug: source.slug, canonicalUrl: "https://example.org/restore/1",
+      title: "الجمعيات الأهلية تنشر تقريرها السنوي",
+      content: "رصد التقرير أوضاع منظمات المجتمع المدني خلال العام.",
+      publishedAt: "2026-07-01T00:00:00.000Z"
+    });
+    // حالة موروثة: الوثيقة اتستبعدت بالقاعدة القديمة ومعرفتها المستخرجة اتمسحت
+    const legacy = new DatabaseSync(path);
+    legacy.prepare("UPDATE documents SET document_type='excluded' WHERE id=?").run(document.documentId);
+    legacy.close();
+    expect(store.countExcludedDocuments()).toBe(1);
+
+    const report = store.restoreExcludedDocuments();
+
+    expect(report).toEqual({ restored: 1, stillExcluded: 0 });
+    expect(store.countExcludedDocuments()).toBe(0);
+    expect(store.search("الجمعيات الأهلية").map((result) => result.documentId)).toContain(document.documentId);
+    store.close();
+  });
+
+  it("leaves genuine noise excluded when restoring", () => {
+    const path = join(mkdtempSync(join(tmpdir(), "erx-restore-noise-")), "research.db");
+    const store = new ResearchStore(path);
+    store.initialize();
+    store.upsertSource(source);
+    store.upsertDocument({
+      externalId: "restore:2", sourceSlug: source.slug, canonicalUrl: "https://example.org/restore/2",
+      title: "التشكيل الرسمي لمباراة كأس العالم",
+      content: "ركلات الترجيح حسمت اللقاء أمس.",
+      publishedAt: "2026-07-01T00:00:00.000Z"
+    });
+    expect(store.countExcludedDocuments()).toBe(1);
+
+    expect(store.restoreExcludedDocuments()).toEqual({ restored: 0, stillExcluded: 1 });
     store.close();
   });
 });
