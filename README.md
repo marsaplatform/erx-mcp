@@ -187,6 +187,7 @@ node dist/cli.js index --provider local
 node dist/cli.js rebuild-stories
 node dist/cli.js rebuild-events
 node dist/cli.js restore-excluded
+node dist/cli.js health
 node dist/cli.js status
 ```
 

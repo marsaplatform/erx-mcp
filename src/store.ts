@@ -582,6 +582,12 @@ export class ResearchStore {
     });
   }
 
+  // مصدر بيفشل في صمت أخطر من مصدر بيرمي استثناء: مهمة الزحف بتنجح والأرشيف بينقص.
+  listUnhealthySources(maxConsecutiveFailures = 3): SourceRecord[] {
+    return this.listSources().filter((source) => source.active
+      && (source.healthStatus === "failed" || source.consecutiveFailures >= maxConsecutiveFailures));
+  }
+
   countExcludedDocuments(): number {
     const row = this.db.prepare("SELECT COUNT(*) AS count FROM documents WHERE document_type='excluded'").get() as Row;
     return asNumber(row["count"]);

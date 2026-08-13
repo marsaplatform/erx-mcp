@@ -272,4 +272,25 @@ describe("ResearchStore", () => {
     expect(store.restoreExcludedDocuments()).toEqual({ restored: 0, stillExcluded: 1 });
     store.close();
   });
+
+  it("flags sources that fail repeatedly so a scheduled run can surface them", () => {
+    const store = new ResearchStore(join(mkdtempSync(join(tmpdir(), "erx-health-")), "research.db"));
+    store.initialize();
+    store.upsertSource({ ...source, slug: "healthy-source" });
+    store.upsertSource({ ...source, slug: "dead-source", url: "https://dead.example.com" });
+    store.upsertSource({ ...source, slug: "silent-source", url: "https://silent.example.com" });
+    store.updateSourceHealth("healthy-source", "healthy");
+    store.updateSourceHealth("dead-source", "failed");
+    // فشل متكرر ثم جولة رجّعت صفر عناصر: الحالة بقت degraded والعداد فضل شايل التاريخ
+    for (let attempt = 0; attempt < 4; attempt += 1) store.updateSourceHealth("silent-source", "failed");
+    store.updateSourceHealth("silent-source", "degraded");
+
+    const unhealthy = store.listUnhealthySources(3);
+
+    expect(unhealthy.map((entry) => entry.slug).sort()).toEqual(["dead-source", "silent-source"]);
+    expect(unhealthy.find((entry) => entry.slug === "silent-source")?.consecutiveFailures).toBe(4);
+    // العتبة بتخفي التدهور الصامت بس، ومابتخفيش مصدر حالته failed
+    expect(store.listUnhealthySources(10).map((entry) => entry.slug)).toEqual(["dead-source"]);
+    store.close();
+  });
 });
