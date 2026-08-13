@@ -89,6 +89,30 @@ describe("SitemapIngestor", () => {
     store.close();
   });
 
+  it("waits as long as the site's robots.txt asks, not the configured minimum", async () => {
+    const store = new ResearchStore(join(mkdtempSync(join(tmpdir(), "egypt-delay-")), "research.db")); store.initialize();
+    store.upsertSource({ slug: "slow-source", name: "مصدر بطيء", url: "https://example.org", sourceType: "legal", ownershipType: "independent_archive", language: "ar", collectionMethod: "html", crawlDelaySeconds: 1 });
+    const article = (n: number) => new Response(`<article><h1>وثيقة قانونية رقم ${n}</h1><p>${"نص القرار والتشريع الصادر ".repeat(10)}</p></article>`, { headers: { "content-type": "text/html" } });
+    const responses: Record<string, Response> = {
+      "/robots.txt": new Response("User-agent: *\nCrawl-delay: 10\n"),
+      "/news": new Response(`<a href="/news/1">١</a><a href="/news/2">٢</a><a href="/news/3">٣</a>`, { headers: { "content-type": "text/html" } }),
+      "/news/1": article(1), "/news/2": article(2), "/news/3": article(3)
+    };
+    const fetcher = (async (input: string | URL | Request) => {
+      const path = new URL(input instanceof Request ? input.url : input).pathname;
+      const response = responses[path];
+      return response ? response.clone() : new Response("missing", { status: 404 });
+    }) as typeof fetch;
+    const waits: number[] = [];
+
+    await new HtmlIngestor(store, { fetcher, sleeper: async (seconds) => { waits.push(seconds); } })
+      .ingestSource("slow-source", { kind: "html", listingUrl: "https://example.org/news", articlePathPattern: "^/news/\\d+$" }, 10);
+
+    expect(waits.length).toBeGreaterThan(0);
+    expect(waits.every((seconds) => seconds === 10)).toBe(true);
+    store.close();
+  });
+
   it("normalizes official JSON API records", async () => {
     const store = new ResearchStore(join(mkdtempSync(join(tmpdir(), "egypt-api-")), "research.db")); store.initialize();
     store.upsertSource({ slug: "api-source", name: "مصدر API", url: "https://example.org", sourceType: "statistics", ownershipType: "government", language: "ar", collectionMethod: "api" });
