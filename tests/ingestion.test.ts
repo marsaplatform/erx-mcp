@@ -63,12 +63,29 @@ describe("SitemapIngestor", () => {
     const responses: Record<string, Response> = {
       "/robots.txt": new Response("User-agent: *\nDisallow: /news/2"),
       "/news": new Response(`<a href="/news/1">one</a><a href="/news/2">blocked</a><a href="https://outside.invalid/news/3">outside</a>`, { headers: { "content-type": "text/html" } }),
-      "/news/1": new Response(`<h1 class="headline">قرار حكومي موثق</h1><div class="story"><p>${"تفاصيل القرار الحكومي ".repeat(10)}</p></div>`, { headers: { "content-type": "text/html" } })
+      "/news/1": new Response(`<meta property="article:published_time" content="2026-07-14T09:30:00Z"><h1 class="headline">قرار حكومي موثق</h1><div class="story"><p>${"تفاصيل القرار الحكومي ".repeat(10)}</p></div>`, { headers: { "content-type": "text/html" } })
     };
     const fetcher = (async (input: string | URL | Request) => responses[new URL(input instanceof Request ? input.url : input).pathname] ?? new Response("missing", { status: 404 })) as typeof fetch;
     const report = await new HtmlIngestor(store, { fetcher, sleeper: async () => {} }).ingestSource("html-source", { kind: "html", listingUrl: "https://example.org/news", articlePathPattern: "^/news/\\d+$", titleSelector: ".headline", contentSelector: ".story" }, 10);
     expect(report).toEqual(expect.objectContaining({ status: "success", itemsFound: 1, itemsSaved: 1 }));
     expect(store.search("قرار حكومي")).toHaveLength(1);
+    expect(store.search("قرار حكومي")[0]?.publishedAt).toBe("2026-07-14T09:30:00.000Z");
+    store.close();
+  });
+
+  it("takes the publication date from the article when the feed omits it", async () => {
+    const store = new ResearchStore(join(mkdtempSync(join(tmpdir(), "egypt-feed-date-")), "research.db")); store.initialize();
+    store.upsertSource({ slug: "dateless-source", name: "مصدر بلا تواريخ", url: "https://news.example.org", sourceType: "news", ownershipType: "independent", language: "ar", feedUrl: "https://news.example.org/feed" });
+    const rss = `<rss><channel><item><title>قرار حكومي موثق</title><link>https://news.example.org/1</link><guid>1</guid></item></channel></rss>`;
+    const responses: Record<string, Response> = {
+      "/feed": new Response(rss, { headers: { "content-type": "application/rss+xml" } }),
+      "/1": new Response(`<meta property="article:published_time" content="2026-07-14T09:30:00Z"><article><h1>قرار حكومي موثق</h1><p>${"تفاصيل القرار الحكومي ".repeat(10)}</p></article>`, { headers: { "content-type": "text/html" } })
+    };
+    const fetcher = (async (input: string | URL | Request) => responses[new URL(input instanceof Request ? input.url : input).pathname] ?? new Response("missing", { status: 404 })) as typeof fetch;
+
+    await new FeedIngestor(store, { fetcher, fullText: true }).ingestSource("dateless-source");
+
+    expect(store.search("قرار حكومي")[0]?.publishedAt).toBe("2026-07-14T09:30:00.000Z");
     store.close();
   });
 

@@ -46,4 +46,16 @@ describe("collection boundaries", () => {
   it("stops reading responses that exceed the byte limit without a content-length header", async () => {
     await expect(readResponseBuffer(new Response("oversized"), 4)).rejects.toThrow("Response exceeds size limit");
   });
+
+  it("extracts the publication date an article carries", () => {
+    const article = (head: string) => `<html><head>${head}</head><body><article><h1>قرار حكومي موثق</h1><p>${"تفاصيل القرار الحكومي ".repeat(10)}</p></article></body></html>`;
+
+    expect(extractArticle(article(`<script type="application/ld+json">{"@type":"NewsArticle","datePublished":"2026-07-14T09:30:00+02:00"}</script>`), "https://example.org/news/1").publishedAt)
+      .toBe("2026-07-14T07:30:00.000Z");
+    expect(extractArticle(article(`<meta property="article:published_time" content="2026-07-14T09:30:00Z">`), "https://example.org/news/1").publishedAt)
+      .toBe("2026-07-14T09:30:00.000Z");
+    expect(extractArticle(`<html><body><article><h1>قرار حكومي موثق</h1><time datetime="2026-07-14">١٤ يوليو</time><p>${"تفاصيل القرار الحكومي ".repeat(10)}</p></article></body></html>`, "https://example.org/news/1").publishedAt)
+      .toBe("2026-07-14T00:00:00.000Z");
+    expect(extractArticle(article(""), "https://example.org/news/1").publishedAt).toBeNull();
+  });
 });
