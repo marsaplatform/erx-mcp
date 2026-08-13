@@ -88,6 +88,35 @@ describe("knowledge and retrieval", () => {
     store.close();
   });
 
+  it("does not invent entities from prefix phrases outside the lexicon", () => {
+    const { store } = fixture();
+    const inserted = store.upsertDocument({
+      externalId: "entities:invented", sourceSlug: "rights-source", canonicalUrl: "https://example.org/entities/invented",
+      title: "قرار بشأن العمال المحتجزين",
+      content: "قررت نيابة العاشر من رمضان إخلاء سبيلهم دون ضمانات عقب التحقيق معهم بشأن قانون العمل.",
+      publishedAt: "2026-07-14T00:00:00.000Z"
+    });
+    new KnowledgeIndexer(store).indexDocument(inserted.documentId);
+    // المكان الحقيقي بس — من غير «نيابه العاشر من رمضان اخلاء سبيلهم» اللي كان الاكتشاف بيخترعها
+    expect(store.listEntities({ documentId: inserted.documentId }).map((entity) => entity.canonicalName)).toEqual(["العاشر من رمضان"]);
+    store.close();
+  });
+
+  it("recognises the widened lexicon of Egyptian institutions and places", () => {
+    const { store } = fixture();
+    const inserted = store.upsertDocument({
+      externalId: "entities:lexicon", sourceSlug: "rights-source", canonicalUrl: "https://example.org/entities/lexicon",
+      title: "نقابة الصحفيين تناقش قانون العمل",
+      content: "عقدت نقابة الصحفيين اجتماعا مع وزارة التربية والتعليم وهيئة التأمينات الاجتماعية في محافظة الشرقية بشأن قانون العمل.",
+      publishedAt: "2026-07-14T00:00:00.000Z"
+    });
+    new KnowledgeIndexer(store).indexDocument(inserted.documentId);
+    expect(store.listEntities({ documentId: inserted.documentId }).map((entity) => entity.canonicalName)).toEqual(
+      expect.arrayContaining(["نقابة الصحفيين", "وزارة التربية والتعليم", "هيئة التأمينات الاجتماعية", "محافظة الشرقية"])
+    );
+    store.close();
+  });
+
   it("does not create a second entity for a known organization prefix", () => {
     const { store } = fixture();
     const inserted = store.upsertDocument({

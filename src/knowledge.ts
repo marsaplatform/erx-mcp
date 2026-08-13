@@ -21,15 +21,29 @@ const lexicon = [
   ["جامعة الدول العربية", "organization", []],
   ["جهاز مستقبل مصر", "organization", []],
   ["الجهاز المركزي للتعبئة العامة والإحصاء", "organization", ["التعبئة والإحصاء"]],
+  ["وزارة الصحة والسكان", "organization", ["وزارة الصحة"]],
+  ["وزارة التربية والتعليم", "organization", []],
+  ["وزارة العدل", "organization", []],
+  ["وزارة القوى العاملة", "organization", []],
+  ["وزارة الإسكان", "organization", []],
+  ["مجلس الشيوخ", "organization", []],
+  ["محكمة القضاء الإداري", "organization", []],
+  ["نقابة الصحفيين", "organization", []],
+  ["نقابة المحامين", "organization", []],
+  ["نقابة الأطباء", "organization", []],
+  ["نقابة المهندسين", "organization", []],
+  ["هيئة التأمينات الاجتماعية", "organization", ["الهيئة القومية للتأمين الاجتماعي"]],
+  ["الجهاز المركزي للمحاسبات", "organization", []],
+  ["البنك المركزي المصري", "organization", []],
+  ["مصلحة الضرائب المصرية", "organization", []],
+  ["الهيئة العامة للرقابة المالية", "organization", []],
   ["القاهرة", "location", []], ["الإسكندرية", "location", []], ["سيناء", "location", []],
-  ["رفح", "location", []], ["العريش", "location", []]
+  ["رفح", "location", []], ["العريش", "location", []], ["الجيزة", "location", []],
+  ["السويس", "location", []], ["بورسعيد", "location", []], ["أسوان", "location", []],
+  ["الأقصر", "location", []], ["دمياط", "location", []], ["العاشر من رمضان", "location", []],
+  ["محافظة الشرقية", "location", []], ["محافظة المنيا", "location", []]
 ] as const;
 const reportingVerbs = ["اعلن", "اعلنت", "تعلن", "قال", "تقول", "اكد", "يوكد", "تؤكد", "ذكر", "افاد", "صرح", "اوضحت", "اوضح", "كشف", "اشار", "نفى", "نفت", "تنفي", "يطالب", "طالبت", "حذر", "تحذر"];
-const entityPrefixes: Array<[string, string]> = [
-  ["وزاره", "organization"], ["مجلس", "organization"], ["محكمه", "organization"], ["جهاز", "organization"],
-  ["هيئه", "organization"], ["مؤسسه", "organization"], ["منظمه", "organization"], ["جامعه", "organization"],
-  ["مفوضيه", "organization"], ["نيابه", "organization"], ["لجنه", "organization"], ["رئاسه", "organization"]
-];
 const months: Record<string, number> = { يناير: 1, فبراير: 2, مارس: 3, ابريل: 4, مايو: 5, يونيو: 6, يوليو: 7, اغسطس: 8, سبتمبر: 9, اكتوبر: 10, نوفمبر: 11, ديسمبر: 12 };
 
 export interface KnowledgeReport { documentId: number; entities: number; claims: number; events: number; embedded: boolean }
@@ -50,19 +64,6 @@ export class KnowledgeIndexer {
       const mentions = candidates.reduce((count, name) => count + occurrences(normalized, normalizeArabic(name)), 0);
       if (!mentions) continue;
       this.store.linkEntity(documentId, canonicalName, entityType, mentions, normalized.includes(normalizeArabic(canonicalName)) ? 0.95 : 0.8, [...aliases]);
-      entities.push(canonicalName);
-    }
-    const known = new Set(lexicon.flatMap(([name]) => {
-      const normalizedName = normalizeArabic(name);
-      return [normalizedName, normalizedName.replace(/^ال/u, "")];
-    }));
-    const knownPrefixes = [...known].sort((left, right) => right.length - left.length);
-    for (const [canonicalName, entityType] of discoverEntities(text)) {
-      const normalizedName = normalizeArabic(canonicalName);
-      if (known.has(normalizedName) || knownPrefixes.some((prefix) => normalizedName.startsWith(`${prefix} `))) continue;
-      const mentions = occurrences(normalized, normalizedName);
-      if (mentions < 1) continue;
-      this.store.linkEntity(documentId, canonicalName, entityType, mentions, 0.7);
       entities.push(canonicalName);
     }
     const claims = [...new Set((document.content ?? "").split(/[.!؟؛\n]+/).map((sentence) => sentence.replace(/\s+/g, " ").trim()).filter((sentence) => sentence.length >= 25 && reportingVerbs.some((verb) => normalizeArabic(sentence).includes(verb))))];
@@ -88,22 +89,6 @@ export class KnowledgeIndexer {
   }
 
   backfill(limit = 10_000): KnowledgeReport[] { return this.store.listDocumentIds(limit).map((id) => this.indexDocument(id)); }
-}
-
-function discoverEntities(value: string): Array<[string, string]> {
-  const normalized = normalizeArabic(value);
-  const found = new Map<string, string>();
-  const stop = new Set(["تعلن", "اعلن", "اعلنت", "قال", "تقول", "بشأن", "بشان", "عن", "في", "من", "الى", "الي", "قرار", "قرارا", "بيان", "بيانا", "قررت", "يتناول", "تناول", "اخلاء", "سبيل", "بعدم", "الدعوى", "الدعوي", "والزمت", "لصالح", "على", "ان", "اليوم", "المقرر", "تنظر", "بحث", "يبحث", "شارك", "مناقشه", "مناقشة", "بشأن", "اجتماعا", "اجتماع", "رييس", "رئيس", "مركز", "المعلومات"]);
-  for (const [prefix, entityType] of entityPrefixes) {
-    const pattern = new RegExp(`${prefix}(?:\\s+[ء-ي]{2,}){1,4}`, "gu");
-    for (const match of normalized.matchAll(pattern)) {
-      const words = match[0]!.trim().split(" ").slice(0, 5);
-      const stopAt = words.findIndex((word, index) => index > 0 && stop.has(word));
-      const name = words.slice(0, stopAt > 0 ? stopAt : words.length).join(" ");
-      if (name.split(" ").length >= 2 && name.length <= 90) found.set(name, entityType);
-    }
-  }
-  return [...found.entries()];
 }
 
 // كلمات كاملة بعد التطبيع (ى ← ي). المطابقة على سلاسل فرعية كانت بتقرأ «تنفيذ» إنكارًا و«الطالب» مطالبة.
