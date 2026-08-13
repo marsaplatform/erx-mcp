@@ -54,6 +54,14 @@ describe("Arabic text helpers", () => {
     expect(isNonResearchContent("بيان عن قانون العمل والعدالة الاجتماعية")).toBe(false);
   });
 
+  it("does not treat الأهلية as the football club الأهلي", () => {
+    expect(isNonResearchContent("الجمعيات الأهلية تنشر تقريرها السنوي")).toBe(false);
+  });
+
+  it("keeps noise-flagged text that still carries a research topic", () => {
+    expect(isNonResearchContent("قال ممثل العمال إن الإدارة تأخرت في تنفيذ الاتفاق بشأن قانون العمل")).toBe(false);
+  });
+
   it("flags foreign-only news but keeps Egypt-linked international affairs", () => {
     expect(isOutOfScopeContent("ترامب عن غزو العراق وانفجارات في بغداد")).toBe(true);
     expect(isOutOfScopeContent("الرئيس السيسي يبحث تداعيات الحرب على مصر")).toBe(false);

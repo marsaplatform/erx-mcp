@@ -105,10 +105,20 @@ export function classifyQuery(value: string): string[] {
   return classifyDocument(tokenizeQuery(value).flatMap(expandArabicSearchToken).join(" "));
 }
 
+const ARABIC_LETTER = "\\u0621-\\u064a";
+
+// مطابقة كلمة كاملة مع سماح بسابقة و/ف/ل/ب/ك. بدونها كانت «الأهلية» تُقرأ نادي «الأهلي».
+function containsKeywordPhrase(normalized: string, keyword: string): boolean {
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  return new RegExp(`(?<![${ARABIC_LETTER}])[وفلبك]?${escaped}(?![${ARABIC_LETTER}])`, "u").test(normalized);
+}
+
 export function isNonResearchContent(value: string): boolean {
   const normalized = normalizeArabic(value);
   if (publicAffairsExceptions.some((keyword) => normalized.includes(normalizeArabic(keyword)))) return false;
-  return nonResearchKeywords.some((keyword) => normalized.includes(normalizeArabic(keyword)));
+  if (!nonResearchKeywords.some((keyword) => containsKeywordPhrase(normalized, normalizeArabic(keyword)))) return false;
+  // كلمات زي «ممثل» و«الدوري» تحتمل معنى بحثيًا. الاستبعاد يتطلب إشارة ثانية: غياب أي موضوع بحثي.
+  return classifyDocument(value).length === 0;
 }
 
 export function isOutOfScopeContent(value: string): boolean {
