@@ -40,4 +40,26 @@ describe("Arabic-first hybrid retrieval", () => {
     expect(new HybridRetriever(store, provider).search("التضخم وأسعار السلع")).toEqual([]);
     store.close();
   });
+
+  it("keeps a document whose only miss is a لل-prefixed query term", () => {
+    const store = new ResearchStore(join(mkdtempSync(join(tmpdir(), "erx-lam-prefix-")), "research.db"));
+    store.initialize();
+    store.upsertSource({ slug: "rights", name: "منظمة حقوقية", url: "https://example.org", sourceType: "human_rights", ownershipType: "independent", language: "ar" });
+    const report = store.upsertDocument({
+      externalId: "prison-care", sourceSlug: "rights", canonicalUrl: "https://example.org/prison-care",
+      title: "المسجونون محرومون من الرعاية الطبية",
+      excerpt: "شكاوى من غياب الرعاية داخل أماكن الاحتجاز",
+      content: "رصد التقرير حرمان المسجونين من الرعاية الطبية اللازمة داخل السجون.",
+      publishedAt: "2026-07-01T00:00:00.000Z"
+    });
+
+    const retriever = new HybridRetriever(store);
+    // ضابط: الوثيقة مفهرسة وقابلة للاسترجاع لما الاستعلام مافيهوش سابقة «لل»
+    expect(retriever.search("الرعاية الطبية في السجون", { limit: 10 }).map((result) => result.documentId)).toContain(report.documentId);
+
+    const results = retriever.search("الرعاية الصحية للمسجونين", { limit: 10 });
+
+    expect(results.map((result) => result.documentId)).toContain(report.documentId);
+    store.close();
+  });
 });
