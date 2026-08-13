@@ -52,6 +52,24 @@ describe("Arabic text helpers", () => {
     expect(classifyDocument("تقرير عن السجن ومكان الاحتجاز")).toContain("أوضاع السجون");
   });
 
+  it("does not read عامل inside معاملة as a labour topic", () => {
+    const torture = classifyDocument("تقرير عن سوء المعاملة داخل أماكن الاحتجاز");
+    expect(torture).toContain("التعذيب وسوء المعاملة");
+    expect(torture).not.toContain("الحقوق العمالية");
+    expect(classifyDocument("تبسيط معاملات المواطنين في الشهر العقاري")).not.toContain("الحقوق العمالية");
+  });
+
+  it("still classifies keywords carrying Arabic prefixes and suffixes", () => {
+    expect(classifyDocument("صدر بالقانون الجديد قرار")).toContain("التشريعات والقرارات");
+    expect(classifyDocument("النصوص القانونية المنظمة للعمل")).toContain("التشريعات والقرارات");
+    expect(classifyDocument("إضراب العمال بسبب قانون العمل")).toContain("الحقوق العمالية");
+  });
+
+  it("classifies a strike as labour without swallowing أعمال", () => {
+    expect(classifyDocument("إضراب عمال وبريات سمنود")).toContain("الحقوق العمالية");
+    expect(classifyDocument("تقرير عن مناخ الأعمال وريادة الأعمال في مصر")).not.toContain("الحقوق العمالية");
+  });
+
   it("flags sports and entertainment noise without hiding public-affairs coverage", () => {
     expect(isNonResearchContent("مبابي ضد لامين والتشكيل الرسمي لمباراة كأس العالم")).toBe(true);
     expect(isNonResearchContent("إنهاء الأهلي عقد تريزيجيه وحفل عمرو دياب")).toBe(true);
