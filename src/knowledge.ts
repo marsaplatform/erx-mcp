@@ -106,11 +106,20 @@ function discoverEntities(value: string): Array<[string, string]> {
   return [...found.entries()];
 }
 
+// كلمات كاملة بعد التطبيع (ى ← ي). المطابقة على سلاسل فرعية كانت بتقرأ «تنفيذ» إنكارًا و«الطالب» مطالبة.
+const denialWords = ["نفي", "نفت", "تنفي", "ينفي", "نفوا", "ينفون"];
+const demandWords = ["طالب", "طالبت", "طالبوا", "يطالب", "تطالب", "يطالبون"];
+const warningWords = ["حذر", "حذرت", "تحذر", "يحذر", "يحذرون"];
+
+function containsWord(normalized: string, words: string[]): boolean {
+  return normalized.split(" ").some((word) => words.includes(word) || (/^[وف]/u.test(word) && words.includes(word.slice(1))));
+}
+
 function classifyClaim(value: string): { claimType: string; stance: string; confidence: number } {
   const normalized = normalizeArabic(value);
-  if (/(نفى|نفت|تنفي|ينفي)/u.test(normalized)) return { claimType: "denial", stance: "contradicts", confidence: 0.82 };
-  if (/(طالب|طالبت|يطالب)/u.test(normalized)) return { claimType: "demand", stance: "advocates", confidence: 0.8 };
-  if (/(حذر|تحذر|يحذر)/u.test(normalized)) return { claimType: "warning", stance: "warns", confidence: 0.8 };
+  if (containsWord(normalized, denialWords)) return { claimType: "denial", stance: "contradicts", confidence: 0.82 };
+  if (containsWord(normalized, demandWords)) return { claimType: "demand", stance: "advocates", confidence: 0.8 };
+  if (containsWord(normalized, warningWords)) return { claimType: "warning", stance: "warns", confidence: 0.8 };
   return { claimType: "reported_statement", stance: "reports", confidence: 0.75 };
 }
 

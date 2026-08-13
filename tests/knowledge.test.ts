@@ -66,6 +66,28 @@ describe("knowledge and retrieval", () => {
     store.close();
   });
 
+  it("does not read تنفيذ as a denial", () => {
+    const { store } = fixture();
+    const inserted = store.upsertDocument({
+      externalId: "claims:implementation", sourceSlug: "rights-source", canonicalUrl: "https://example.org/claims/implementation",
+      title: "خلاف حول تنفيذ الاتفاق", content: "قال أحد العمال إن الإدارة تأخرت في تنفيذ الاتفاق الموقع معهم بشأن قانون العمل.", publishedAt: "2026-07-14T00:00:00.000Z"
+    });
+    new KnowledgeIndexer(store).indexDocument(inserted.documentId);
+    expect(store.listClaims({ documentId: inserted.documentId })[0]?.claimType).toBe("reported_statement");
+    store.close();
+  });
+
+  it("does not read الطالب as a demand", () => {
+    const { store } = fixture();
+    const inserted = store.upsertDocument({
+      externalId: "claims:student", sourceSlug: "rights-source", canonicalUrl: "https://example.org/claims/student",
+      title: "قواعد التقديم الإلكتروني", content: "أكدت المديرية أن الطالب يقدم أوراقه إلكترونيا عبر موقع وزارة التربية والتعليم.", publishedAt: "2026-07-14T00:00:00.000Z"
+    });
+    new KnowledgeIndexer(store).indexDocument(inserted.documentId);
+    expect(store.listClaims({ documentId: inserted.documentId })[0]?.claimType).toBe("reported_statement");
+    store.close();
+  });
+
   it("does not create a second entity for a known organization prefix", () => {
     const { store } = fixture();
     const inserted = store.upsertDocument({
