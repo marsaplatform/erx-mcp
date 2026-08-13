@@ -15,6 +15,7 @@ export interface ExtractedArticle {
   excerpt: string;
   content: string;
   canonicalUrl: string;
+  publishedAt: string | null;
 }
 
 const array = <T>(value: T | T[] | undefined): T[] => value === undefined ? [] : Array.isArray(value) ? value : [value];
@@ -128,17 +129,48 @@ export function robotsAllows(robots: string, targetUrl: string, userAgent = "Egy
   return matching[0]?.allow ?? true;
 }
 
+function isoOrNull(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  const parsed = new Date(raw.trim());
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function jsonLdPublishedAt(value: unknown): string | null {
+  if (Array.isArray(value)) return value.reduce<string | null>((found, item) => found ?? jsonLdPublishedAt(item), null);
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const direct = typeof record["datePublished"] === "string" ? isoOrNull(record["datePublished"]) : null;
+  return direct ?? jsonLdPublishedAt(record["@graph"]);
+}
+
+// المسار الـ HTML كان بيهمل تاريخ النشر تمامًا، فكل مصدر بيتزحف بالـ HTML كان بيدخل بتاريخ فاضي.
+function extractPublishedAt($: ReturnType<typeof load>): string | null {
+  for (const element of $("script[type='application/ld+json']").toArray()) {
+    try {
+      const found = jsonLdPublishedAt(JSON.parse($(element).text()));
+      if (found) return found;
+    } catch { /* JSON-LD مكسور — نكمل للمصدر اللي بعده */ }
+  }
+  return isoOrNull($("meta[property='article:published_time']").attr("content"))
+    ?? isoOrNull($("meta[name='article:published_time']").attr("content"))
+    ?? isoOrNull($("meta[property='og:published_time']").attr("content"))
+    ?? isoOrNull($("meta[name='publish-date']").attr("content"))
+    ?? isoOrNull($("time[datetime]").first().attr("datetime"));
+}
+
 export function extractArticle(html: string, canonicalUrl: string, selectors: { titleSelector?: string; contentSelector?: string } = {}): ExtractedArticle {
   const $ = load(html);
+  const publishedAt = extractPublishedAt($);
+  const empty = { title: "", excerpt: "", content: "", canonicalUrl, publishedAt: null };
   const configured = selectors.contentSelector ? $(selectors.contentSelector).first() : null;
   const main = configured?.length ? configured : $("article").first().length ? $("article").first() : $("main").first().length ? $("main").first() : $("[role=main]").first();
-  if (!main.length) return { title: "", excerpt: "", content: "", canonicalUrl };
+  if (!main.length) return empty;
   const title = cleanText((selectors.titleSelector ? $(selectors.titleSelector).first().text() : "") || main.find("h1").first().text() || $("h1").first().text() || $("title").text());
   main.find("script,style,noscript,svg,nav,header,footer,aside,form").remove();
   const content = cleanText(main.find("p,li,h2,h3,blockquote").map((_, element) => $(element).text()).get().join("\n"));
-  if (!title || content.length < 40) return { title: "", excerpt: "", content: "", canonicalUrl };
+  if (!title || content.length < 40) return empty;
   const description = $("meta[name=description]").attr("content") ?? $("meta[property='og:description']").attr("content") ?? "";
-  return { title, excerpt: cleanText(description) || content.slice(0, 500), content, canonicalUrl };
+  return { title, excerpt: cleanText(description) || content.slice(0, 500), content, canonicalUrl, publishedAt };
 }
 
 export async function readResponseBuffer(response: Response, maxBytes: number): Promise<Buffer> {

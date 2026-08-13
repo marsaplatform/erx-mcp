@@ -58,15 +58,17 @@ export class FeedIngestor {
       let saved = 0; let enriched = 0; let failures = 0;
       for (const entry of entries) {
         let content = entry.content;
+        let publishedAt = entry.publishedAt;
         const existing = this.store.getDocumentByUrl(entry.canonicalUrl);
         if (!this.options.fullText && existing?.content && existing.content.length > content.length) content = existing.content;
         if (this.options.fullText) {
           try {
             const article = await fetchArticle(entry.canonicalUrl, sourceHost, this.options.fetcher ?? fetch);
             if (article.content) { content = article.content; enriched += 1; }
+            publishedAt ??= article.publishedAt;
           } catch { failures += 1; }
         }
-        const result = this.store.upsertDocument({ externalId: entry.externalId, sourceSlug, canonicalUrl: entry.canonicalUrl, title: entry.title, excerpt: entry.excerpt, content, publishedAt: entry.publishedAt, documentType: "article", topics: classifyDocument(`${entry.title} ${entry.excerpt} ${content}`), language: source.language });
+        const result = this.store.upsertDocument({ externalId: entry.externalId, sourceSlug, canonicalUrl: entry.canonicalUrl, title: entry.title, excerpt: entry.excerpt, content, publishedAt, documentType: "article", topics: classifyDocument(`${entry.title} ${entry.excerpt} ${content}`), language: source.language });
         if (result.createdVersion) saved += 1;
         this.store.assignStory(result.documentId);
       }
@@ -123,7 +125,7 @@ export class HtmlIngestor {
           if (!(response.headers.get("content-type") ?? "").includes("html")) throw new Error("Article response is not HTML");
           const article = extractArticle((await readResponseBuffer(response, 5_000_000)).toString("utf8"), urls[index]!, connector);
           if (!article.title || !article.content) throw new Error("Article has no extractable title or content");
-          const result = this.store.upsertDocument({ externalId: externalId(sourceSlug, urls[index]!), sourceSlug, canonicalUrl: canonicalizeUrl(urls[index]!), title: article.title, excerpt: article.excerpt || article.content.slice(0, 500), content: article.content, documentType: "article", topics: classifyDocument(`${article.title} ${article.content}`), language: source.language });
+          const result = this.store.upsertDocument({ externalId: externalId(sourceSlug, urls[index]!), sourceSlug, canonicalUrl: canonicalizeUrl(urls[index]!), title: article.title, excerpt: article.excerpt || article.content.slice(0, 500), content: article.content, publishedAt: article.publishedAt, documentType: "article", topics: classifyDocument(`${article.title} ${article.content}`), language: source.language });
           this.store.assignStory(result.documentId); if (result.createdVersion) saved += 1; enriched += 1;
         } catch { failures += 1; }
       }
