@@ -101,8 +101,10 @@ export function classifyDocument(value: string): string[] {
   return TOPICS.filter((topic) => topicKeywords[topic].some((keyword) => normalized.includes(normalizeArabic(keyword))));
 }
 
+// النص الأصلي مع التوسيع: التوسيع بيفكّ اللواصق (للأجور ← الأجور)، والأصل بيحافظ على
+// الكلمات المفتاحية المركّبة (قانون العمل) اللي تفكيك التوكنات بيكسرها.
 export function classifyQuery(value: string): string[] {
-  return classifyDocument(tokenizeQuery(value).flatMap(expandArabicSearchToken).join(" "));
+  return classifyDocument(`${value} ${tokenizeQuery(value).flatMap(expandArabicSearchToken).join(" ")}`);
 }
 
 const ARABIC_LETTER = "\\u0621-\\u064a";
