@@ -83,4 +83,67 @@ describe("MCP contract", () => {
     expect(liveDatasets.structuredContent).toEqual(expect.objectContaining({ count: 6, datasets: expect.any(Array) }));
     await client.close(); await server.close(); store.close();
   });
+
+  it("keeps the research dossier small enough to return", async () => {
+    const store = new ResearchStore(join(mkdtempSync(join(tmpdir(), "egypt-dossier-size-")), "research.db"));
+    store.initialize();
+    store.upsertSource({ slug: "wire-source", name: "وكالة", url: "https://example.org", sourceType: "news", ownershipType: "independent", language: "ar" });
+    const indexer = new KnowledgeIndexer(store);
+    for (let index = 0; index < 10; index += 1) {
+      const inserted = store.upsertDocument({
+        externalId: `wire-${index}`, sourceSlug: "wire-source", canonicalUrl: `https://example.org/wire/${index}`,
+        title: `النيابة العامة تحقق في واقعة رقم ${index} بالقاهرة`,
+        excerpt: "وقال المصدر إن التحقيق مستمر في كل جوانب الواقعة المطروحة أمام الجهات المختصة. ".repeat(40),
+        content: `أعلنت النيابة العامة في القاهرة تفاصيل التحقيق بشأن قانون العمل. ${"وقال المصدر إن التحقيق مستمر في كل جوانب الواقعة المطروحة أمام الجهات المختصة. ".repeat(12)}`,
+        publishedAt: `2026-07-${String(index + 1).padStart(2, "0")}T09:00:00.000Z`
+      });
+      store.assignStory(inserted.documentId);
+      indexer.indexDocument(inserted.documentId);
+    }
+    const server = createMcpServer(store);
+    const client = new Client({ name: "dossier-size-test", version: "1.0.0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
+
+    const result = await client.callTool({ name: "egypt_research_dossier", arguments: { query: "النيابة العامة", limit: 10 } });
+    const dossier = result.structuredContent as { results: Record<string, unknown>[]; timeline: Record<string, unknown>[]; entities: unknown[]; claims: unknown[] };
+
+    expect(dossier.results.length).toBeGreaterThan(0);
+    expect(dossier.timeline.every((entry) => entry["citation"] === undefined)).toBe(true);
+    expect(dossier.results.every((result) => (result as { excerpt: string }).excerpt.length <= 401)).toBe(true);
+    expect(JSON.stringify(dossier).length).toBeLessThan(25_000);
+
+    await client.close();
+    await server.close();
+    store.close();
+  });
+
+  it("returns only the dossier sections the caller asks for", async () => {
+    const store = new ResearchStore(join(mkdtempSync(join(tmpdir(), "egypt-dossier-include-")), "research.db"));
+    store.initialize();
+    store.upsertSource({ slug: "wire-source", name: "وكالة", url: "https://example.org", sourceType: "news", ownershipType: "independent", language: "ar" });
+    const inserted = store.upsertDocument({
+      externalId: "wire-1", sourceSlug: "wire-source", canonicalUrl: "https://example.org/wire/1",
+      title: "النيابة العامة تحقق في واقعة بالقاهرة",
+      content: "أعلنت النيابة العامة في القاهرة تفاصيل التحقيق بشأن قانون العمل ومستحقات العمال المتأخرة.",
+      publishedAt: "2026-07-14T09:00:00.000Z"
+    });
+    new KnowledgeIndexer(store).indexDocument(inserted.documentId);
+    const server = createMcpServer(store);
+    const client = new Client({ name: "dossier-include-test", version: "1.0.0" });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
+
+    const result = await client.callTool({ name: "egypt_research_dossier", arguments: { query: "النيابة العامة", include: ["results"] } });
+    const dossier = result.structuredContent as Record<string, unknown>;
+
+    expect(dossier["results"]).toBeDefined();
+    expect(dossier["coverage"]).toBeDefined();
+    expect(dossier["timeline"]).toBeUndefined();
+    expect(dossier["claims"]).toBeUndefined();
+
+    await client.close();
+    await server.close();
+    store.close();
+  });
 });
