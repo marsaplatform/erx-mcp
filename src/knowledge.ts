@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import type { EmbeddingProvider } from "./retrieval.js";
 import type { ResearchStore } from "./store.js";
-import { normalizeArabic } from "./text.js";
+import { matchesArabicKeyword, normalizeArabic } from "./text.js";
 
 const lexicon = [
   ["المبادرة المصرية للحقوق الشخصية", "organization", ["المبادرة المصرية"]],
@@ -66,7 +66,7 @@ export class KnowledgeIndexer {
       this.store.linkEntity(documentId, canonicalName, entityType, mentions, normalized.includes(normalizeArabic(canonicalName)) ? 0.95 : 0.8, [...aliases]);
       entities.push(canonicalName);
     }
-    const claims = [...new Set((document.content ?? "").split(/[.!؟؛\n]+/).map((sentence) => sentence.replace(/\s+/g, " ").trim()).filter((sentence) => sentence.length >= 25 && reportingVerbs.some((verb) => normalizeArabic(sentence).includes(verb))))];
+    const claims = [...new Set((document.content ?? "").split(/[.!؟؛\n]+/).map((sentence) => sentence.replace(/\s+/g, " ").trim()).filter((sentence) => sentence.length >= 25 && reportingVerbs.some((verb) => matchesArabicKeyword(normalizeArabic(sentence), verb))))];
     for (const claim of claims) {
       const classification = classifyClaim(claim);
       this.store.upsertClaim(documentId, claim, classification.claimType, classification.stance, classification.confidence);

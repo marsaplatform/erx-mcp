@@ -28,7 +28,7 @@ const topicKeywords: Record<(typeof TOPICS)[number], string[]> = {
   "أوضاع السجون": ["السجون", "السجن", "مركز اصلاح", "مكان الاحتجاز", "prison", "detention center", "death in custody"],
   "التعذيب وسوء المعاملة": ["تعذيب", "سوء المعامله", "معامله مهينه", "torture", "ill-treatment", "abuse in detention"],
   "حقوق اللاجئين والمهاجرين": ["لاجئ", "لاجء", "مهاجر", "ترحيل", "طالبي اللجوء", "refugee", "migrant", "asylum seeker", "deportation"],
-  "الحقوق العمالية": ["حقوق العمال", "الحقوق العماليه", "اضراب عمالي", "قانون العمل", "عامل", "نقاب", "workers", "labor rights", "labour rights", "strike", "wages"],
+  "الحقوق العمالية": ["حقوق العمال", "الحقوق العماليه", "اضراب", "قانون العمل", "عامل", "عمال", "نقاب", "workers", "labor rights", "labour rights", "strike", "wages"],
   "الحقوق الرقمية": ["خصوصيه رقميه", "امن رقمي", "جريمه الكترونيه", "مراقبه رقميه", "online", "digital rights", "cyber", "content moderation", "surveillance"],
   "حرية الدين والمعتقد": ["حريه الدين", "حريه المعتقد", "ازدراء الاديان", "تمييز ديني"],
   "حقوق المرأة": ["حقوق المراه", "عنف ضد النساء", "ختان", "تحرش", "زواج مبكر"],
@@ -96,9 +96,20 @@ export function expandArabicSearchToken(value: string): string[] {
   return [...variants];
 }
 
+const ARABIC_LETTER = "\\u0621-\\u064a";
+// السوابق المتصلة في العربية: و/ف ثم ب/ك/ل ثم ال. الكلمة لازم تبدأ عند حد كلمة —
+// من غير ده «المعاملة» بتتقري «عامل» و«مقال» بتتقري «قال».
+const PROCLITIC = "(?:[وف])?(?:[بكل])?(?:ال)?";
+
+export function matchesArabicKeyword(normalized: string, keyword: string, options: { closedEnd?: boolean } = {}): boolean {
+  const escaped = normalizeArabic(keyword).replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const tail = options.closedEnd ? `(?![${ARABIC_LETTER}a-z0-9])` : "";
+  return new RegExp(`(?<![${ARABIC_LETTER}a-z0-9])${PROCLITIC}${escaped}${tail}`, "u").test(normalized);
+}
+
 export function classifyDocument(value: string): string[] {
   const normalized = normalizeArabic(value);
-  return TOPICS.filter((topic) => topicKeywords[topic].some((keyword) => normalized.includes(normalizeArabic(keyword))));
+  return TOPICS.filter((topic) => topicKeywords[topic].some((keyword) => matchesArabicKeyword(normalized, keyword)));
 }
 
 // النص الأصلي مع التوسيع: التوسيع بيفكّ اللواصق (للأجور ← الأجور)، والأصل بيحافظ على
@@ -107,18 +118,10 @@ export function classifyQuery(value: string): string[] {
   return classifyDocument(`${value} ${tokenizeQuery(value).flatMap(expandArabicSearchToken).join(" ")}`);
 }
 
-const ARABIC_LETTER = "\\u0621-\\u064a";
-
-// مطابقة كلمة كاملة مع سماح بسابقة و/ف/ل/ب/ك. بدونها كانت «الأهلية» تُقرأ نادي «الأهلي».
-function containsKeywordPhrase(normalized: string, keyword: string): boolean {
-  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-  return new RegExp(`(?<![${ARABIC_LETTER}])[وفلبك]?${escaped}(?![${ARABIC_LETTER}])`, "u").test(normalized);
-}
-
 export function isNonResearchContent(value: string): boolean {
   const normalized = normalizeArabic(value);
   if (publicAffairsExceptions.some((keyword) => normalized.includes(normalizeArabic(keyword)))) return false;
-  if (!nonResearchKeywords.some((keyword) => containsKeywordPhrase(normalized, normalizeArabic(keyword)))) return false;
+  if (!nonResearchKeywords.some((keyword) => matchesArabicKeyword(normalized, keyword, { closedEnd: true }))) return false;
   // كلمات زي «ممثل» و«الدوري» تحتمل معنى بحثيًا. الاستبعاد يتطلب إشارة ثانية: غياب أي موضوع بحثي.
   return classifyDocument(value).length === 0;
 }

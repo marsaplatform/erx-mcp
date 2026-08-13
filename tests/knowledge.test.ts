@@ -117,6 +117,19 @@ describe("knowledge and retrieval", () => {
     store.close();
   });
 
+  it("does not turn مقال or انتقال into a reported claim", () => {
+    const { store } = fixture();
+    const inserted = store.upsertDocument({
+      externalId: "claims:article-word", sourceSlug: "rights-source", canonicalUrl: "https://example.org/claims/article-word",
+      title: "مقال عن قانون العمل",
+      content: "نشر مقال عن أوضاع العمال في الصحيفة اليومية بشأن قانون العمل. وجرى انتقال عدد من العاملين بين المنشآت.",
+      publishedAt: "2026-07-14T00:00:00.000Z"
+    });
+    new KnowledgeIndexer(store).indexDocument(inserted.documentId);
+    expect(store.listClaims({ documentId: inserted.documentId })).toEqual([]);
+    store.close();
+  });
+
   it("does not create a second entity for a known organization prefix", () => {
     const { store } = fixture();
     const inserted = store.upsertDocument({
