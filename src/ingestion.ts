@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { basename } from "node:path";
 import { load } from "cheerio";
 
-import { canonicalizeUrl, extractArticle, fetchArticle, hostAllowed, parseFeed, parseSitemap, readResponseBuffer, robotsAllows } from "./collection.js";
+import { canonicalizeUrl, extractArticle, fetchArticle, hostAllowed, parseFeed, parseSitemap, readResponseBuffer, robotsAllows, robotsCrawlDelay } from "./collection.js";
 import type { ApiConnector, HtmlConnector } from "./connectors.js";
 import { extractPdf, type PdfExtraction } from "./pdf.js";
 import type { ResearchStore } from "./store.js";
@@ -117,9 +117,12 @@ export class HtmlIngestor {
         robots = (await readResponseBuffer(response, 1_000_000)).toString("utf8");
       } catch { robots = ""; }
       const urls = source.robotsPolicy === "respect" ? discovered.filter((url) => robotsAllows(robots, url)) : discovered;
+      // الموقع بيطلب تأخير معيّن — بناخد الأكبر بين طلبه وإعدادنا، مش إعدادنا وبس
+      const requested = source.robotsPolicy === "respect" ? robotsCrawlDelay(robots, SOURCE_USER_AGENT) : null;
+      const delaySeconds = Math.max(source.crawlDelaySeconds, requested ?? 0);
       let saved = 0; let enriched = 0; let failures = 0;
       for (let index = 0; index < urls.length; index += 1) {
-        if (index > 0) await (this.options.sleeper ?? sleep)(source.crawlDelaySeconds);
+        if (index > 0) await (this.options.sleeper ?? sleep)(delaySeconds);
         try {
           const response = await fetchResponse(urls[index]!, host, 5_000_000, this.options.fetcher ?? fetch);
           if (!(response.headers.get("content-type") ?? "").includes("html")) throw new Error("Article response is not HTML");

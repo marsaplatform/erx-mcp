@@ -107,6 +107,35 @@ export function parseSitemap(xml: string, allowedHost: string, maxUrls = 5_000):
   return { kind, urls };
 }
 
+// كنا بنقرا السماح والمنع من robots ونتجاهل Crawl-delay، فبنزحف بثانية واحدة حتى لما الموقع
+// يطلب عشرة. النتيجة حجب، والحجب في أرشيف بحثي معناه تغطية ناقصة.
+export function robotsCrawlDelay(robots: string, userAgent = "EgyptResearchMCP"): number | null {
+  const groups: Array<{ agents: string[]; delay: number | null }> = [];
+  let current: { agents: string[]; delay: number | null } | undefined;
+  let sawRule = false;
+  for (const rawLine of robots.split(/\r?\n/)) {
+    const line = rawLine.split("#", 1)[0]?.trim() ?? "";
+    if (!line.includes(":")) continue;
+    const [rawKey, ...parts] = line.split(":");
+    const key = rawKey?.trim().toLowerCase();
+    const value = parts.join(":").trim();
+    if (key === "user-agent") {
+      if (!current || sawRule) { current = { agents: [], delay: null }; groups.push(current); sawRule = false; }
+      current.agents.push(value.toLowerCase());
+    } else if (current) {
+      sawRule = true;
+      if (key === "crawl-delay") {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed) && parsed > 0) current.delay = parsed;
+      }
+    }
+  }
+  const agent = userAgent.toLowerCase();
+  const specific = groups.filter((group) => group.agents.some((candidate) => candidate !== "*" && (agent.includes(candidate) || candidate.includes(agent))));
+  const selected = specific.length ? specific : groups.filter((group) => group.agents.includes("*"));
+  return selected.map((group) => group.delay).find((delay) => delay !== null) ?? null;
+}
+
 export function robotsAllows(robots: string, targetUrl: string, userAgent = "EgyptResearchMCP"): boolean {
   const groups: Array<{ agents: string[]; rules: Array<{ allow: boolean; path: string }> }> = [];
   let current: { agents: string[]; rules: Array<{ allow: boolean; path: string }> } | undefined;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractArticle, parseFeed, parseSitemap, readResponseBuffer, robotsAllows } from "../src/collection.js";
+import { extractArticle, parseFeed, parseSitemap, readResponseBuffer, robotsAllows, robotsCrawlDelay } from "../src/collection.js";
 
 describe("collection boundaries", () => {
   it("parses RSS, canonicalizes tracking URLs, and strips markup", () => {
@@ -57,5 +57,17 @@ describe("collection boundaries", () => {
     expect(extractArticle(`<html><body><article><h1>قرار حكومي موثق</h1><time datetime="2026-07-14">١٤ يوليو</time><p>${"تفاصيل القرار الحكومي ".repeat(10)}</p></article></body></html>`, "https://example.org/news/1").publishedAt)
       .toBe("2026-07-14T00:00:00.000Z");
     expect(extractArticle(article(""), "https://example.org/news/1").publishedAt).toBeNull();
+  });
+
+  it("reads the crawl delay a site asks for", () => {
+    const robots = "User-agent: *\nCrawl-delay: 10\nDisallow: /admin/\n";
+    expect(robotsCrawlDelay(robots)).toBe(10);
+    expect(robotsCrawlDelay("User-agent: *\nDisallow: /admin/\n")).toBeNull();
+    expect(robotsCrawlDelay("")).toBeNull();
+  });
+
+  it("prefers the group that names our crawler over the wildcard group", () => {
+    const robots = "User-agent: *\nCrawl-delay: 20\n\nUser-agent: ERX-EgyptResearch\nCrawl-delay: 5\n";
+    expect(robotsCrawlDelay(robots, "ERX-EgyptResearch/1.1.0")).toBe(5);
   });
 });
