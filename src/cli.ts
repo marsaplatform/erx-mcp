@@ -68,6 +68,24 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
     const result = { ...store.reclassifyDocuments(), topics: store.backfillDocumentTopics(), ...store.rebuildStories() };
     output({ status: "ok", ...result }); store.close(); return 0;
   }
+  if (args.command === "health") {
+    const threshold = Number(args.values.get("max-failures") ?? 3);
+    const unhealthy = store.listUnhealthySources(threshold);
+    const sources = store.listSources();
+    output({
+      status: unhealthy.length ? "unhealthy" : "ok",
+      threshold,
+      total: sources.length,
+      healthy: sources.filter((source) => source.healthStatus === "healthy").length,
+      unhealthy: unhealthy.map((source) => ({
+        slug: source.slug, name: source.name, health: source.healthStatus,
+        consecutiveFailures: source.consecutiveFailures, documents: source.documentCount,
+        lastSuccessAt: source.lastSuccessAt, feedUrl: source.feedUrl
+      }))
+    });
+    store.close();
+    return unhealthy.length ? 1 : 0;
+  }
   if (args.command === "restore-excluded") {
     const restored = store.restoreExcludedDocuments();
     const reports = restored.restored ? new KnowledgeIndexer(store).backfill(100_000) : [];
