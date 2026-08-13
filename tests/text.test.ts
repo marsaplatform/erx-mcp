@@ -42,6 +42,11 @@ describe("Arabic text helpers", () => {
     expect(classifyQuery("قرار المحكمة الدستورية بشأن القانون")).toContain("القضاء والمحاكمات");
   });
 
+  it("keeps multi-word topic keywords that token expansion would break apart", () => {
+    expect(classifyQuery("قانون العمل الجديد")).toContain("الحقوق العمالية");
+    expect(classifyQuery("الدين العام المصري")).toContain("الاقتصاد والعدالة الاجتماعية");
+  });
+
   it("classifies legal and human-rights material", () => {
     expect(classifyDocument("قرار المحكمة الدستورية بشأن القانون")).toContain("القضاء والمحاكمات");
     expect(classifyDocument("تقرير عن السجن ومكان الاحتجاز")).toContain("أوضاع السجون");
