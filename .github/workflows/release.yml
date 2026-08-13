@@ -3,6 +3,10 @@ name: release
 on:
   push:
     tags: ["v*"]
+  # شغّلها يدويًا على الوسم نفسه (Run workflow ثم اختر التاج) لو فشل النشر لسبب
+  # خارج المستودع. الخطوات تقرأ الوسم من GITHUB_REF، فالتشغيل من فرع يفشل عند
+  # release:check قبل أي نشر.
+  workflow_dispatch:
 
 permissions:
   contents: write
