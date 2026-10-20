@@ -9,7 +9,7 @@ dependencies.
 > TS toolchain (tsc, tsx, Bun, Vite, esbuild, etc.). `main` and `types` both
 > point at the source file.
 
-- **Base URL:** `https://erx-mcp.zad.tools`
+- **Base URL:** `https://egypt-research.marsaplatform.com`
 - **API prefix:** `/api/v1`
 - **Auth:** none (read-only)
 
@@ -25,7 +25,7 @@ npm install egypt-research-client
 ```ts
 import { ErxClient, ErxError } from "egypt-research-client";
 
-const client = new ErxClient(); // defaults to https://erx-mcp.zad.tools
+const client = new ErxClient(); // defaults to https://egypt-research.marsaplatform.com
 
 // Search the archive (results are fully typed)
 const hits = await client.search("قانون العمل", { mode: "hybrid", limit: 5 });

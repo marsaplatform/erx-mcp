@@ -3,11 +3,15 @@
 **Egypt Research Commons / مرصد مصر البحثي** — a source-grounded MCP server and REST research
 commons for Egyptian public affairs. Every result carries its original URL, publisher, and dates.
 
-- MCP endpoint (Streamable HTTP): `https://erx-mcp.zad.tools/mcp`
-- REST base: `https://erx-mcp.zad.tools/api/v1`
-- npm package: `egypt-research-mcp` (Node `>=24`, no API key required for public research)
+- MCP endpoint (Streamable HTTP): `https://egypt-research.marsaplatform.com/mcp`
+- REST base: `https://egypt-research.marsaplatform.com/api/v1`
+- npm package: `egypt-research-mcp` (Node `>=24`)
+- **API key:** the hosted MCP and REST API need a free key — sign up at
+  <https://egypt-research.marsaplatform.com/#signup>, create a key in the dashboard (shown once),
+  and send it as `Authorization: Bearer <key>` (or `X-API-Key`). Free plan: 50,000 calls/month.
+  Self-hosted servers need no key. The web search at `/explore` stays open.
 
-> Replace `https://erx-mcp.zad.tools` with your own origin if you self-host. In self-hosted
+> Replace `https://egypt-research.marsaplatform.com` with your own origin if you self-host. In self-hosted
 > deployments the base URL is taken from `EGYPT_RESEARCH_PUBLIC_URL`.
 
 ---
@@ -15,19 +19,32 @@ commons for Egyptian public affairs. Every result carries its original URL, publ
 ## 1. MCP — النموذج (Model Context Protocol)
 
 ERX ships the same 21 `egypt_*` tools over two transports: **Streamable HTTP** (hosted) and
-**stdio** (local process). Neither requires authentication for read tools.
+**stdio** (local process). The hosted HTTP endpoint needs your free API key; stdio and
+self-hosted HTTP need none.
 
 ### 1.1 Streamable HTTP (hosted)
 
 Point any MCP client at the hosted endpoint.
 
-**Claude Desktop / generic client** — `claude_desktop_config.json`:
+**Claude Code:**
+
+```bash
+claude mcp add --transport http egypt-research https://egypt-research.marsaplatform.com/mcp \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+
+**Claude Desktop** — `claude_desktop_config.json` (bridged with `mcp-remote`, which passes the key header):
 
 ```json
 {
   "mcpServers": {
     "egypt-research": {
-      "url": "https://erx-mcp.zad.tools/mcp"
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote", "https://egypt-research.marsaplatform.com/mcp",
+        "--header", "Authorization: Bearer YOUR_API_KEY"
+      ]
     }
   }
 }
@@ -39,7 +56,8 @@ Point any MCP client at the hosted endpoint.
 {
   "mcpServers": {
     "egypt-research": {
-      "url": "https://erx-mcp.zad.tools/mcp"
+      "url": "https://egypt-research.marsaplatform.com/mcp",
+      "headers": { "Authorization": "Bearer YOUR_API_KEY" }
     }
   }
 }
@@ -52,7 +70,8 @@ Point any MCP client at the hosted endpoint.
   "servers": {
     "egypt-research": {
       "type": "http",
-      "url": "https://erx-mcp.zad.tools/mcp"
+      "url": "https://egypt-research.marsaplatform.com/mcp",
+      "headers": { "Authorization": "Bearer YOUR_API_KEY" }
     }
   }
 }
@@ -93,7 +112,10 @@ dependency:
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const transport = new StreamableHTTPClientTransport(new URL("https://erx-mcp.zad.tools/mcp"));
+const transport = new StreamableHTTPClientTransport(
+  new URL("https://egypt-research.marsaplatform.com/mcp"),
+  { requestInit: { headers: { Authorization: `Bearer ${process.env.ERX_API_KEY}` } } }
+);
 const client = new Client({ name: "erx-demo", version: "1.0.0" });
 await client.connect(transport);
 
@@ -109,7 +131,7 @@ await client.close();
 
 ## 2. REST — الواجهة (public HTTP API)
 
-Base: `https://erx-mcp.zad.tools/api/v1`. All endpoints are `GET`, return JSON, send
+Base: `https://egypt-research.marsaplatform.com/api/v1`. All endpoints are `GET`, return JSON, send
 `Access-Control-Allow-Origin: *`, and are rate limited per client per minute. JSON response
 fields are **snake_case** (the server converts internal camelCase on the wire).
 
@@ -137,7 +159,7 @@ Validation errors return `422` with `{ "error": { "code": "invalid_query" } }` (
 ### 2.1 Search
 
 ```bash
-curl -G "https://erx-mcp.zad.tools/api/v1/search" \
+curl -H "Authorization: Bearer $ERX_API_KEY" -G "https://egypt-research.marsaplatform.com/api/v1/search" \
   --data-urlencode "q=قانون العمل" \
   --data-urlencode "mode=hybrid" \
   --data-urlencode "limit=5"
@@ -170,7 +192,7 @@ Response (abridged):
 ### 2.2 Get a document
 
 ```bash
-curl "https://erx-mcp.zad.tools/api/v1/documents/1"
+curl -H "Authorization: Bearer $ERX_API_KEY" "https://egypt-research.marsaplatform.com/api/v1/documents/1"
 ```
 
 ```json
@@ -182,7 +204,7 @@ curl "https://erx-mcp.zad.tools/api/v1/documents/1"
 ### 2.3 Coverage
 
 ```bash
-curl "https://erx-mcp.zad.tools/api/v1/coverage"
+curl "https://egypt-research.marsaplatform.com/api/v1/coverage"
 ```
 
 ```json
@@ -199,7 +221,7 @@ curl "https://erx-mcp.zad.tools/api/v1/coverage"
 ### 2.4 Live data
 
 ```bash
-curl -G "https://erx-mcp.zad.tools/api/v1/live/data" \
+curl -H "Authorization: Bearer $ERX_API_KEY" -G "https://egypt-research.marsaplatform.com/api/v1/live/data" \
   --data-urlencode "source=world-bank" \
   --data-urlencode "indicator=SP.POP.TOTL" \
   --data-urlencode "country=EGY"
@@ -224,7 +246,7 @@ formats. Supported `format` values:
 | `jsonl` | Data pipelines | one full JSON result per line |
 
 ```bash
-curl -G "https://erx-mcp.zad.tools/export" \
+curl -G "https://egypt-research.marsaplatform.com/export" \
   --data-urlencode "q=قانون العمل" \
   --data-urlencode "format=ris" -o egypt-research.ris
 ```
@@ -262,7 +284,7 @@ All MCP tools are prefixed `egypt_`. The most useful ones:
 | اختبار صحة مصادر البيانات الحية | `egypt_live_source_health` | `egypt_live_source_health()` |
 
 The full, always-current tool reference (inputs + copy-paste examples) is rendered on the hosted
-docs page: `https://erx-mcp.zad.tools/docs`.
+docs page: `https://egypt-research.marsaplatform.com/docs`.
 
 ---
 

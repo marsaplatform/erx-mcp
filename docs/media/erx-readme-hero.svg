@@ -24,5 +24,5 @@
     <g transform="translate(0 260)"><rect width="356" height="100" fill="#101614" stroke="#34413c"/><rect width="5" height="100" fill="#e8c45b"/><text x="24" y="28" fill="#e8c45b" font-size="10" font-weight="700">PUBLIC DATA</text><text x="24" y="54" fill="#edf1ea" font-size="16" font-weight="700">Indicators and historical context</text><text x="24" y="78" fill="#8f9b95" font-size="11">Methodology · provider · retrieval timestamp</text></g>
     <circle cx="338" cy="10" r="4" fill="#59df8b"><animate attributeName="opacity" values="1;.25;1" dur="2.2s" repeatCount="indefinite"/></circle>
   </g>
-  <path d="M64 518H1136" stroke="#34413c"/><text x="64" y="540" fill="#7f8c86" font-family="ui-monospace,monospace" font-size="11">SOURCE-BACKED · ARABIC-FIRST · OPEN RESEARCH INFRASTRUCTURE</text><text x="1136" y="540" fill="#59df8b" font-family="ui-monospace,monospace" font-size="11" text-anchor="end">erx-mcp.zad.tools ↗</text>
+  <path d="M64 518H1136" stroke="#34413c"/><text x="64" y="540" fill="#7f8c86" font-family="ui-monospace,monospace" font-size="11">SOURCE-BACKED · ARABIC-FIRST · OPEN RESEARCH INFRASTRUCTURE</text><text x="1136" y="540" fill="#59df8b" font-family="ui-monospace,monospace" font-size="11" text-anchor="end">egypt-research.marsaplatform.com ↗</text>
 </svg>

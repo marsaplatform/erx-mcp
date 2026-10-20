@@ -1,7 +1,8 @@
 """Dependency-free Python client for the ERX (Egypt Research) REST API.
 
 The ERX API is a read-only, source-grounded research API for Egyptian
-public-affairs. It requires no authentication and returns snake_case JSON.
+public-affairs. The hosted deployment needs a free API key (``api_key`` or ``$ERX_API_KEY``);
+self-hosted servers need none. Responses are snake_case JSON.
 
 This module uses only the Python standard library (``urllib``, ``json``),
 so it can be dropped into any project without installing dependencies.
@@ -18,6 +19,7 @@ Example
 from __future__ import annotations
 
 import json
+import os
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -26,7 +28,7 @@ from typing import Any, Dict, Mapping, Optional
 
 __all__ = ["ErxClient", "ErxError"]
 
-DEFAULT_BASE_URL = "https://erx-mcp.zad.tools"
+DEFAULT_BASE_URL = "https://egypt-research.marsaplatform.com"
 API_PREFIX = "/api/v1"
 
 # Type aliases kept intentionally loose: the API returns snake_case JSON
@@ -59,10 +61,13 @@ class ErxClient:
     Args:
         base_url: Root URL of the ERX deployment (no trailing ``/api/v1``).
         timeout: Per-request timeout in seconds.
+        api_key: API key for the hosted deployment (free from the subscriber
+            dashboard). Sent as a Bearer token. Defaults to ``$ERX_API_KEY``.
     """
 
     base_url: str = DEFAULT_BASE_URL
     timeout: float = 30.0
+    api_key: Optional[str] = field(default_factory=lambda: os.environ.get("ERX_API_KEY"), repr=False)
     _opener: urllib.request.OpenerDirector = field(
         default_factory=urllib.request.build_opener, repr=False, compare=False
     )
@@ -100,9 +105,10 @@ class ErxClient:
     ) -> str:
         """Perform a GET request and return the raw response body as text."""
         url = self._build_url(path, params)
-        request = urllib.request.Request(
-            url, headers={"Accept": accept, "User-Agent": "erx-client-python/1.0"}
-        )
+        headers = {"Accept": accept, "User-Agent": "erx-client-python/1.0"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        request = urllib.request.Request(url, headers=headers)
         try:
             with self._opener.open(request, timeout=self.timeout) as response:
                 return response.read().decode("utf-8")

@@ -3,10 +3,11 @@
 Thin, dependency-free client libraries for the **ERX (Egypt Research) REST
 API** — a source-grounded API for Egyptian public-affairs research.
 
-- **Base URL:** `https://erx-mcp.zad.tools`
+- **Base URL:** `https://egypt-research.marsaplatform.com`
 - **API prefix:** `/api/v1`
 - **Auth:** none (read-only, snake_case JSON)
-- **MCP endpoint:** `https://erx-mcp.zad.tools/mcp` (Streamable HTTP)
+- **MCP endpoint:** `https://egypt-research.marsaplatform.com/mcp` (Streamable HTTP)
+- **API key:** the hosted API needs a free key (sign up at <https://egypt-research.marsaplatform.com/#signup>). Pass `apiKey` (TypeScript) or `api_key` / `$ERX_API_KEY` (Python); it is sent as `Authorization: Bearer`. Self-hosted servers need none.
 
 Both clients expose the same endpoint surface: `search`, document lookup,
 sources, coverage, entities, events, claims, live datasets/data/health, status,

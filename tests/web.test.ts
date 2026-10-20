@@ -125,7 +125,7 @@ describe("web and REST", () => {
   });
 
   it("enables HSTS only for a configured HTTPS production origin", async () => {
-    const production = await fixture(120, "https://erx-mcp.zad.tools");
+    const production = await fixture(120, "https://egypt-research.marsaplatform.com");
     const local = await fixture();
     expect((await fetch(`${production.base}/readyz`)).headers.get("strict-transport-security")).toBe("max-age=31536000; includeSubDomains");
     expect((await fetch(`${local.base}/readyz`)).headers.get("strict-transport-security")).toBeNull();

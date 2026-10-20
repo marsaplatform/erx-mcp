@@ -3,9 +3,9 @@
 > Onboarding-by-example. Four realistic research workflows, each following the same shape: **question → search → compare sources → build timeline → export citation**. They use real corpus topics and the real ERX tools.
 >
 > Every workflow works three ways, using the same underlying data:
-> - **Web:** at [`/explore`](https://erx-mcp.zad.tools/explore) — no account needed.
-> - **MCP:** via an assistant connected to `https://erx-mcp.zad.tools/mcp`, calling the `egypt_*` tools.
-> - **REST:** against `https://erx-mcp.zad.tools/api/v1`.
+> - **Web:** at [`/explore`](https://egypt-research.marsaplatform.com/explore) — no account needed.
+> - **MCP:** via an assistant connected to `https://egypt-research.marsaplatform.com/mcp`, calling the `egypt_*` tools.
+> - **REST:** against `https://egypt-research.marsaplatform.com/api/v1`.
 >
 > **Tools referenced:** `egypt_search`, `egypt_hybrid_search`, `egypt_build_timeline`, `egypt_compare_sources`, `egypt_export_references`.
 >
@@ -78,4 +78,4 @@
 
 ## The pattern, in one line
 
-Every ERX workflow is the same discipline: **don't stop at a link — go to the primary source, compare how sources describe it, order the events with dates, and cite what you found.** ERX just makes each of those steps a single tool call (`egypt_search` / `egypt_hybrid_search` → `egypt_compare_sources` → `egypt_build_timeline` → `egypt_export_references`) — or a few clicks at [`/explore`](https://erx-mcp.zad.tools/explore).
+Every ERX workflow is the same discipline: **don't stop at a link — go to the primary source, compare how sources describe it, order the events with dates, and cite what you found.** ERX just makes each of those steps a single tool call (`egypt_search` / `egypt_hybrid_search` → `egypt_compare_sources` → `egypt_build_timeline` → `egypt_export_references`) — or a few clicks at [`/explore`](https://egypt-research.marsaplatform.com/explore).

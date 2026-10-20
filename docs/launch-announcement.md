@@ -28,7 +28,7 @@
 
 ### كيف تبدأ (بدون حساب)
 
-1. افتح **[/explore](https://erx-mcp.zad.tools/explore)** على الموقع.
+1. افتح **[/explore](https://egypt-research.marsaplatform.com/explore)** على الموقع.
 2. اكتب سؤالك أو موضوعك بالعربية — مثل «قرار تموين» أو «خدمات اللاجئين» أو «جهاز مستقبل مصر».
 3. تصفّح النتائج، افتح الوثيقة الأصلية، قارن المصادر، وابنِ خط الزمن.
 4. صدّر الاستشهادات حين تجهز.
@@ -39,15 +39,15 @@
 
 ERX متاح أيضًا كخادم **MCP** وكـ**REST API**، فيمكنك ربطه بأدواتك ونماذجك:
 
-- **نقطة MCP:** `https://erx-mcp.zad.tools/mcp` (نوع streamable-http)
-- **REST API:** `https://erx-mcp.zad.tools/api/v1`
+- **نقطة MCP:** `https://egypt-research.marsaplatform.com/mcp` (نوع streamable-http)
+- **REST API:** `https://egypt-research.marsaplatform.com/api/v1`
 - **حزمة npm:** `egypt-research-mcp` (نقل stdio للتشغيل المحلي)
 
 بذلك يستطيع مساعدك (Claude أو Cursor أو أي عميل MCP) البحث في مصادر الشأن المصري ومقارنتها وبناء خطوط زمنية وتصدير الاستشهادات — بنفس البيانات الموثّقة.
 
 ### جرّبها
 
-ابدأ من **[/explore](https://erx-mcp.zad.tools/explore)**. لا حساب، لا رسوم للبدء — فقط ابحث.
+ابدأ من **[/explore](https://egypt-research.marsaplatform.com/explore)**. لا حساب، لا رسوم للبدء — فقط ابحث.
 
 ---
 
@@ -75,7 +75,7 @@ What makes ERX different:
 
 ### How to start (no account)
 
-1. Open **[/explore](https://erx-mcp.zad.tools/explore)**.
+1. Open **[/explore](https://egypt-research.marsaplatform.com/explore)**.
 2. Type your question or topic — in Arabic or English (e.g. "تموين decision", "refugee services", "جهاز مستقبل مصر").
 3. Browse results, open the source document, compare sources, and build a timeline.
 4. Export citations when you're ready.
@@ -86,25 +86,25 @@ No signup or email required to start searching.
 
 ERX is also available as an **MCP server** and a **REST API**, so you can wire it into your own tools and models:
 
-- **MCP endpoint:** `https://erx-mcp.zad.tools/mcp` (streamable-http)
-- **REST API:** `https://erx-mcp.zad.tools/api/v1`
+- **MCP endpoint:** `https://egypt-research.marsaplatform.com/mcp` (streamable-http)
+- **REST API:** `https://egypt-research.marsaplatform.com/api/v1`
 - **npm package:** `egypt-research-mcp` (stdio transport for local use)
 
 Your assistant (Claude, Cursor, or any MCP client) can then search Egyptian public-affairs sources, compare them, build timelines, and export citations — grounded in the same documents.
 
 ### Try it
 
-Start at **[/explore](https://erx-mcp.zad.tools/explore)**. No account, no cost to start — just search.
+Start at **[/explore](https://egypt-research.marsaplatform.com/explore)**. No account, no cost to start — just search.
 
 ---
 
 ### Short social variants (copy/paste)
 
 **X / Twitter (Arabic):**
-> متابعة الشأن العام المصري بترجعك دايمًا لنفس السؤال: إيه المصدر الأصلي؟ ERX أرشيف بحثي مبني على المصادر — ابحث، قارن المصادر، ابنِ خط زمن، وصدّر الاستشهادات. من غير حساب: erx-mcp.zad.tools/explore
+> متابعة الشأن العام المصري بترجعك دايمًا لنفس السؤال: إيه المصدر الأصلي؟ ERX أرشيف بحثي مبني على المصادر — ابحث، قارن المصادر، ابنِ خط زمن، وصدّر الاستشهادات. من غير حساب: egypt-research.marsaplatform.com/explore
 
 **X / Twitter (English):**
-> Following Egyptian public affairs always circles back to one question: what's the primary source? ERX is a source-grounded research archive — search, compare sources, build timelines, export citations. No account: erx-mcp.zad.tools/explore
+> Following Egyptian public affairs always circles back to one question: what's the primary source? ERX is a source-grounded research archive — search, compare sources, build timelines, export citations. No account: egypt-research.marsaplatform.com/explore
 
 **LinkedIn (one-liner):**
-> Launched ERX — a source-grounded research archive + MCP/REST API for Egyptian public affairs. 1,300+ documents across ~35 official, legal, rights, news, and academic sources. Search back to primary sources at erx-mcp.zad.tools/explore.
+> Launched ERX — a source-grounded research archive + MCP/REST API for Egyptian public affairs. 1,300+ documents across ~35 official, legal, rights, news, and academic sources. Search back to primary sources at egypt-research.marsaplatform.com/explore.

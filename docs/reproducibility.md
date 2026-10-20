@@ -16,7 +16,7 @@ carries a `citation` object with two stability guarantees:
   on the document's canonical source URL, so the same source always maps to the same
   `citationId` — across machines, across database rebuilds, and across ERX versions.
 - **`permalink`** — a stable URL of the form
-  `https://erx-mcp.zad.tools/documents/<documentId>` that resolves to the ERX record.
+  `https://egypt-research.marsaplatform.com/documents/<documentId>` that resolves to the ERX record.
 
 المعرّف `citationId` مشتق حسابيًا من الرابط الأصلي (canonical URL) للوثيقة، لذا فهو ثابت
 عبر الأجهزة وإعادة بناء قاعدة البيانات وإصدارات ERX المختلفة. أما `permalink` فهو رابط دائم
@@ -32,7 +32,7 @@ The full `citation` object is:
   "publishedAt": "2026-07-15T10:00:00.000Z",
   "archivedAt": "2026-07-20T08:00:00.000Z",
   "citationId": "erx:9f2c1a7b4de0",
-  "permalink": "https://erx-mcp.zad.tools/documents/1234"
+  "permalink": "https://egypt-research.marsaplatform.com/documents/1234"
 }
 ```
 
@@ -49,12 +49,12 @@ accessed it (ERX is a living corpus, so the accessed date matters).
 **Example (English):**
 
 > Ministry of Finance. "قرار وزاري جديد" (2026-07-15). Egypt Research Commons (ERX),
-> `erx:9f2c1a7b4de0`, https://erx-mcp.zad.tools/documents/1234 (accessed 2026-07-20).
+> `erx:9f2c1a7b4de0`, https://egypt-research.marsaplatform.com/documents/1234 (accessed 2026-07-20).
 
 **مثال (بالعربية):**
 
 > وزارة المالية، «قرار وزاري جديد» (2026-07-15)، منصة ERX للأبحاث المصرية،
-> المعرّف `erx:9f2c1a7b4de0`، https://erx-mcp.zad.tools/documents/1234 (تاريخ الاطلاع 2026-07-20).
+> المعرّف `erx:9f2c1a7b4de0`، https://egypt-research.marsaplatform.com/documents/1234 (تاريخ الاطلاع 2026-07-20).
 
 ## 3. Producing a dataset snapshot / إنتاج لقطة من مجموعة البيانات
 
@@ -89,7 +89,7 @@ This writes a versioned, checksummed snapshot into the output directory
     { "name": "sources.json", "sha256": "…", "bytes": 45678 }
   ],
   "license": "MIT (code); source content rights reserved to owners",
-  "citation": "Egypt Research Commons (ERX) dataset snapshot v1.0.0, generated 2026-07-20T08:00:00.000Z. https://erx-mcp.zad.tools"
+  "citation": "Egypt Research Commons (ERX) dataset snapshot v1.0.0, generated 2026-07-20T08:00:00.000Z. https://egypt-research.marsaplatform.com"
 }
 ```
 
