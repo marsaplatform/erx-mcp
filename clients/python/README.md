@@ -5,7 +5,7 @@ source-grounded research API for Egyptian public affairs. It uses only the
 Python standard library (`urllib`, `json`), so there is nothing to install
 beyond copying the single module.
 
-- **Base URL:** `https://erx-mcp.zad.tools`
+- **Base URL:** `https://egypt-research.marsaplatform.com`
 - **API prefix:** `/api/v1`
 - **Auth:** none (read-only)
 - **Python:** 3.9+
@@ -23,7 +23,7 @@ pip install .
 ```python
 from erx_client import ErxClient, ErxError
 
-client = ErxClient()  # defaults to https://erx-mcp.zad.tools
+client = ErxClient()  # defaults to https://egypt-research.marsaplatform.com
 
 # Search the archive
 hits = client.search("قانون العمل", mode="hybrid", limit=5)

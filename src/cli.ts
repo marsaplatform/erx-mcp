@@ -180,7 +180,7 @@ async function main(argv = process.argv.slice(2)): Promise<number> {
       sourceCount: sources.length,
       files,
       license: "MIT (code); source content rights reserved to owners",
-      citation: `Egypt Research Commons (ERX) dataset snapshot v${VERSION}, generated ${generatedAt}. https://erx-mcp.zad.tools`
+      citation: `Egypt Research Commons (ERX) dataset snapshot v${VERSION}, generated ${generatedAt}. https://egypt-research.marsaplatform.com`
     };
     const manifestPath = join(directory, "manifest.json");
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);

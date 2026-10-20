@@ -8,7 +8,7 @@
 
 ## A. MCP Registry submission
 
-ERX already ships a valid `server.json` with `name` (mcpName) `io.github.ahmedvnabil/egypt-research`, a streamable-http remote at `https://erx-mcp.zad.tools/mcp`, and an npm package `egypt-research-mcp`. That is most of the work. Remaining steps:
+ERX already ships a valid `server.json` with `name` (mcpName) `io.github.ahmedvnabil/egypt-research`, a streamable-http remote at `https://egypt-research.marsaplatform.com/mcp`, and an npm package `egypt-research-mcp`. That is most of the work. Remaining steps:
 
 1. **Confirm namespace ownership.** The mcpName namespace `io.github.ahmedvnabil` maps to the GitHub account `ahmedvnabil`, and the repo is `github.com/ahmedvnabil/erx`. Publishing authenticates against that GitHub identity, so make sure you can auth as `ahmedvnabil`.
 2. **Install the publisher CLI.** Use the official `mcp-publisher` tool (from the modelcontextprotocol registry tooling). Authenticate via GitHub (`mcp-publisher login github` or the OAuth device flow).
@@ -75,7 +75,7 @@ Reach developers and AI-agent builders so ERX shows up inside the tools they alr
 
 - **npm:** publish and maintain `egypt-research-mcp`. Ensure a clear README (what it is, the MCP endpoint, REST base, example tool calls), keywords (`mcp`, `egypt`, `research`, `arabic`, `osint`), and version parity with `server.json`.
 - **MCP client directories:** submit ERX to the connector/registry directories used by:
-  - **Claude** (Desktop/Code MCP connectors) — remote streamable-http via `https://erx-mcp.zad.tools/mcp`.
+  - **Claude** (Desktop/Code MCP connectors) — remote streamable-http via `https://egypt-research.marsaplatform.com/mcp`.
   - **Cursor** — MCP server directory / one-click add config snippet.
   - **VS Code** — MCP extension config; provide a copy-paste `mcp.json` snippet.
 - **Config snippets:** publish ready-to-paste config for each client (remote URL for hosted; `npx egypt-research-mcp` for stdio/local).

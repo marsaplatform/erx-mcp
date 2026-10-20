@@ -5,13 +5,13 @@
  *   npx tsx example.ts
  * or compile with tsc and run the emitted JS on Node.js 18+.
  *
- * It hits the public read-only endpoints at https://erx-mcp.zad.tools .
+ * It hits the public read-only endpoints at https://egypt-research.marsaplatform.com .
  */
 
 import { ErxClient, ErxError } from "./src/index.js";
 
 async function main(): Promise<void> {
-  const client = new ErxClient(); // defaults to https://erx-mcp.zad.tools
+  const client = new ErxClient(); // defaults to https://egypt-research.marsaplatform.com
 
   try {
     const status = await client.status();

@@ -70,7 +70,7 @@ describe("citation identifiers", () => {
     const store = newStore("erx-cite-permalink-");
     const inserted = store.upsertDocument(document);
     const result = store.getDocument(inserted.documentId);
-    expect(result?.citation.permalink).toBe(`https://erx-mcp.zad.tools/documents/${inserted.documentId}`);
+    expect(result?.citation.permalink).toBe(`https://egypt-research.marsaplatform.com/documents/${inserted.documentId}`);
     expect((result?.citation.permalink ?? "").endsWith(`/documents/${inserted.documentId}`)).toBe(true);
     store.close();
   });

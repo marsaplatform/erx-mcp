@@ -248,7 +248,7 @@ async function fetchJson(url: URL, fetcher: Fetcher): Promise<{ body: unknown; s
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      response = await fetcher(url, { headers: { accept: "application/json", "user-agent": "ERX-Egypt-Research/0.15 (+https://erx-mcp.zad.tools)" }, signal: AbortSignal.timeout(15_000) });
+      response = await fetcher(url, { headers: { accept: "application/json", "user-agent": "ERX-Egypt-Research/0.15 (+https://egypt-research.marsaplatform.com)" }, signal: AbortSignal.timeout(15_000) });
       if (response.status === 429 || response.status >= 500) {
         if (response.status === 429) throw new LiveDataError("rate_limited", "Live source rate limit reached", 429);
         throw new LiveDataError("upstream_error", `Live source returned HTTP ${response.status}`, response.status);

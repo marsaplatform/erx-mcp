@@ -2,9 +2,9 @@
 
 Runnable examples against **Egypt Research Commons / مرصد مصر البحثي**.
 
-- Hosted MCP endpoint: `https://erx-mcp.zad.tools/mcp`
-- Hosted REST base: `https://erx-mcp.zad.tools/api/v1`
-- No API key is required for public research.
+- Hosted MCP endpoint: `https://egypt-research.marsaplatform.com/mcp`
+- Hosted REST base: `https://egypt-research.marsaplatform.com/api/v1`
+- The hosted MCP and REST API need a **free API key** (sign up at <https://egypt-research.marsaplatform.com/#signup>, then create a key in the dashboard). Export it as `ERX_API_KEY`. Self-hosted servers need no key.
 
 See [`../docs/USAGE.md`](../docs/USAGE.md) for the full developer guide.
 

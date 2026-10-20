@@ -242,7 +242,7 @@ same change → seven-day canary before backfill.
 A researcher who hits an empty result for a topic can propose a source:
 
 1. **Open a GitHub issue** titled `source-request: <publisher name>` on the
-   [erx repository](https://github.com/ahmedvnabil/erx), including:
+   [erx repository](https://github.com/marsaplatform/erx-mcp), including:
    - Publisher name (Arabic + English), homepage URL, and the topic gap it fills.
    - `sourceType` (one of: official, legal, news, human_rights, academic, statistics,
      investigative) and ownership type.

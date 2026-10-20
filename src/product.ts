@@ -226,7 +226,7 @@ export function registryManifest(baseUrl: string): Record<string, unknown> {
     description: "Source-grounded research for Egyptian public affairs",
     version: VERSION,
     websiteUrl: baseUrl,
-    repository: { id: "1300883187", url: "https://github.com/ahmedvnabil/erx", source: "github" },
+    repository: { id: "1300883187", url: "https://github.com/marsaplatform/erx-mcp", source: "github" },
     remotes: [{ type: "streamable-http", url: `${baseUrl}/mcp` }],
     packages: [{ registryType: "npm", identifier: "egypt-research-mcp", version: VERSION, transport: { type: "stdio" } }]
   };
