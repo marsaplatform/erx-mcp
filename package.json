@@ -16,11 +16,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ahmedvnabil/erx.git"
+    "url": "git+https://github.com/marsaplatform/erx-mcp.git"
   },
   "homepage": "https://erx-mcp.zad.tools",
   "bugs": {
-    "url": "https://github.com/ahmedvnabil/erx/issues"
+    "url": "https://github.com/marsaplatform/erx-mcp/issues"
   },
   "keywords": [
     "mcp",
@@ -60,9 +60,9 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^5.0.5",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^5.0.5"
   }
 }

@@ -1,3 +1,5 @@
+[![CI](https://github.com/marsaplatform/erx-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/marsaplatform/erx-mcp/actions/workflows/ci.yml)
+
 <p align="center">
   <img src="docs/media/erx-readme-hero.svg" width="1200" alt="ERX: من سؤال عن الشأن المصري إلى مصادر وأدلة قابلة للاستشهاد">
 </p>
