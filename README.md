@@ -233,3 +233,7 @@ npm run release:check
 </p>
 
 <p align="center"><strong>اسأل. قارن. استشهد.</strong></p>
+
+## Repository resources · موارد المستودع
+
+- [License / الترخيص](LICENSE)
