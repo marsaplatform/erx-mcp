@@ -1,8 +1,6 @@
 [![CI](https://github.com/marsaplatform/erx-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/marsaplatform/erx-mcp/actions/workflows/ci.yml)
 
-<p align="center">
-  <img src="docs/media/erx-readme-hero.svg" width="1200" alt="ERX: من سؤال عن الشأن المصري إلى مصادر وأدلة قابلة للاستشهاد">
-</p>
+![واجهة ERX الحالية](docs/media/current-home.png)
 
 <h1 align="center">ERX — Egypt Research Commons</h1>
 
@@ -21,13 +19,11 @@
   <a href="docs/architecture.md">المعمارية</a>
 </p>
 
-<p align="center">
-  <a href="https://erx-mcp.zad.tools/sources"><img src="docs/media/erx-terminal-demo.svg" width="960" alt="مستكشف ERX للمصادر: بحث ومقارنة وعرض الأدلة"></a>
-</p>
+![انتقال فعلي من الرئيسية إلى مستكشف المصادر](docs/media/current-tour.gif)
 
-<p align="center">
-  <img src="docs/media/erx-stats-strip.svg" width="1200" alt="أكثر من ألف وثيقة، 35 مصدرًا تشغيليًا، 21 أداة MCP، و97 اختبارًا ناجحًا">
-</p>
+لقطات محلية بتاريخ 24 أكتوبر 2026، بكتالوج المصادر المرفق ومن دون استيراد وثائق. الأرقام في الصور تخص هذه النسخة التجريبية، وليست إحصاءات الخدمة المستضافة.
+
+نتائج الفحص موثقة بتاريخها في [تقرير المراجعة](docs/CODE_REVIEW_2026-10-24.md).
 
 ## ابحث في مصر، لا في الضوضاء
 
@@ -213,7 +209,7 @@ npm run release:check
 
 عند إنشاء tag، ينشر المشروع حزمة npm وبيانات MCP Registry وصورة متعددة
 المعماريات على GitHub Container Registry. راجع
-[قائمة الإطلاق](docs/launch-checklist.md) و[تقرير QA](docs/qa-report-0.16.0.md).
+[قائمة الإطلاق](docs/launch-checklist.md) و[تقرير المراجعة الحالي](docs/CODE_REVIEW_2026-10-24.md).
 
 ## حدود المنهجية
 
