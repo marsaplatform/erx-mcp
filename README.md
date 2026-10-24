@@ -167,8 +167,8 @@ npx -y egypt-research-mcp serve --transport stdio
 يتطلب Node.js 24 أو أحدث وnpm.
 
 ```bash
-git clone https://github.com/ahmedvnabil/erx.git
-cd erx
+git clone https://github.com/marsaplatform/erx-mcp.git
+cd erx-mcp
 npm ci
 npm run build
 node dist/cli.js init
@@ -235,3 +235,24 @@ npm run release:check
 ## Repository resources · موارد المستودع
 
 - [License / الترخيص](LICENSE)
+
+## Existing GitHub Container package
+
+The original container package remains at `ghcr.io/ahmedvnabil/egypt-research-mcp`,
+while its maintained source is now [`marsaplatform/erx-mcp`](https://github.com/marsaplatform/erx-mcp).
+Its visibility remains **public**. Existing version tags are preserved.
+
+```sh
+docker pull ghcr.io/ahmedvnabil/egypt-research-mcp:latest
+```
+
+The manually triggered **Refresh existing GHCR package** workflow validates
+the current source and publishes `latest` plus an immutable `sha-<full-commit>`
+tag to this same package. It labels the image with the current repository URL.
+For reproducible installations, use that SHA tag instead of `latest`.
+
+The workflow needs a repository secret named `GHCR_COMPAT_TOKEN`, containing
+a classic token for the package owner with `read:packages` and `write:packages`.
+The moved repository's default `GITHUB_TOKEN` cannot by itself publish to the
+original personal-account namespace. The workflow verifies the existing package
+is public before publishing; it never changes package visibility.
