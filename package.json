@@ -1,6 +1,6 @@
 {
   "name": "egypt-research-mcp",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Source-grounded MCP server and research commons for Egyptian public affairs",
   "mcpName": "io.github.ahmedvnabil/egypt-research",
   "license": "MIT",
