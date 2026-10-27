@@ -4,7 +4,7 @@ Run with:
 
     python3 example.py
 
-It hits the public read-only endpoints at https://erx-mcp.zad.tools .
+It hits the public read-only endpoints at https://egypt-research.marsaplatform.com .
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from erx_client import ErxClient, ErxError
 
 
 def main() -> None:
-    client = ErxClient()  # defaults to https://erx-mcp.zad.tools
+    client = ErxClient()  # defaults to https://egypt-research.marsaplatform.com
 
     try:
         status = client.status()

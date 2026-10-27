@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1 — 2026-10-28
+
+- Update the hosted endpoint to egypt-research.marsaplatform.com and document free API-key authentication.
+- Add optional bearer credentials to Python and TypeScript clients and refresh installation examples.
+- Include company-owned container publication, dependency security updates, and real application captures from the current main branch.
+
+
 ## 1.2.0 — 2026-08-14
 
 إصدار تصحيحي يعالج عائلة واحدة من الأخطاء: المطابقة العربية على السلاسل الفرعية

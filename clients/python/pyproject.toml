@@ -13,7 +13,7 @@ keywords = ["egypt", "research", "erx", "mcp", "api-client"]
 dependencies = []
 
 [project.urls]
-Homepage = "https://erx-mcp.zad.tools"
+Homepage = "https://egypt-research.marsaplatform.com"
 
 [tool.setuptools]
 py-modules = ["erx_client"]

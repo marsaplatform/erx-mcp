@@ -8,7 +8,8 @@ Usage:
     python3 examples/python_quickstart.py "حرية الصحافة"
     ERX_BASE=http://localhost:8080 python3 examples/python_quickstart.py
 
-No API key is required for public research.
+The hosted endpoint needs a free API key: set ERX_API_KEY (sign up at
+https://egypt-research.marsaplatform.com/#signup). Self-hosted servers need none.
 """
 import json
 import os
@@ -16,14 +17,17 @@ import sys
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-BASE = os.environ.get("ERX_BASE", "https://erx-mcp.zad.tools")
+BASE = os.environ.get("ERX_BASE", "https://egypt-research.marsaplatform.com")
 
 
 def search(query: str, *, mode: str = "hybrid", limit: int = 5) -> dict:
     """Call GET /api/v1/search and return the parsed JSON envelope."""
     params = urlencode({"q": query, "mode": mode, "limit": limit})
     url = f"{BASE}/api/v1/search?{params}"
-    request = Request(url, headers={"Accept": "application/json"})
+    headers = {"Accept": "application/json"}
+    if os.environ.get("ERX_API_KEY"):
+        headers["Authorization"] = f"Bearer {os.environ['ERX_API_KEY']}"
+    request = Request(url, headers=headers)
     with urlopen(request, timeout=30) as response:  # noqa: S310 (trusted ERX host)
         return json.loads(response.read().decode("utf-8"))
 

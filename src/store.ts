@@ -19,7 +19,7 @@ import type {
 
 type Row = Record<string, unknown>;
 
-const ERX_PERMALINK_BASE = "https://erx-mcp.zad.tools";
+const ERX_PERMALINK_BASE = "https://egypt-research.marsaplatform.com";
 
 export interface StoreOptions {
   readonly?: boolean;

@@ -2,7 +2,8 @@
  * Zero-dependency TypeScript client for the ERX (Egypt Research) REST API.
  *
  * Uses the global `fetch` API (Node.js 18+ or any modern browser). The ERX
- * API is read-only, requires no authentication, and returns snake_case JSON.
+ * API is read-only, returns snake_case JSON. The hosted deployment needs a
+ * free API key (pass `apiKey`); self-hosted servers need none.
  *
  * @example
  * ```ts
@@ -18,7 +19,7 @@
  * @packageDocumentation
  */
 
-export const DEFAULT_BASE_URL = "https://erx-mcp.zad.tools";
+export const DEFAULT_BASE_URL = "https://egypt-research.marsaplatform.com";
 const API_PREFIX = "/api/v1";
 
 /** A citation attached to every document/result. */
@@ -117,6 +118,8 @@ export interface ErxClientOptions {
   base_url?: string;
   /** Per-request timeout in milliseconds. Defaults to 30000. */
   timeout?: number;
+  /** API key for the hosted deployment (free from the subscriber dashboard). Sent as a Bearer token. */
+  apiKey?: string;
 }
 
 /** Options for {@link ErxClient.search}. */
@@ -150,10 +153,12 @@ type QueryValue = string | number | boolean | undefined | null;
 export class ErxClient {
   private readonly baseUrl: string;
   private readonly timeout: number;
+  private readonly apiKey: string | undefined;
 
   constructor(options: ErxClientOptions = {}) {
     this.baseUrl = (options.base_url ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
     this.timeout = options.timeout ?? 30_000;
+    this.apiKey = options.apiKey;
   }
 
   // -- HTTP plumbing ----------------------------------------------------
@@ -181,7 +186,11 @@ export class ErxClient {
     let response: Response;
     try {
       response = await fetch(url, {
-        headers: { Accept: accept, "User-Agent": "erx-client-ts/1.0" },
+        headers: {
+          Accept: accept,
+          "User-Agent": "erx-client-ts/1.0",
+          ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
+        },
         signal: controller.signal,
       });
     } catch (error) {

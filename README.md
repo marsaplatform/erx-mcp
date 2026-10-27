@@ -12,9 +12,9 @@
 </p>
 
 <p align="center">
-  <a href="https://erx-mcp.zad.tools">الموقع</a> ·
-  <a href="https://erx-mcp.zad.tools/explore">البحث</a> ·
-  <a href="https://erx-mcp.zad.tools/docs">التوثيق</a> ·
+  <a href="https://egypt-research.marsaplatform.com">الموقع</a> ·
+  <a href="https://egypt-research.marsaplatform.com/explore">البحث</a> ·
+  <a href="https://egypt-research.marsaplatform.com/docs">التوثيق</a> ·
   <a href="BRAND.md">الهوية</a> ·
   <a href="docs/architecture.md">المعمارية</a>
 </p>
@@ -44,7 +44,7 @@ ERX ليس وسيلة إعلام ولا يقرر صحة الادعاء نياب�
 | المجتمع والخدمات العامة | بحث الصحة والتعليم والعمل والسكان عبر الأخبار والبيانات |
 | الإعلام والخطاب العام | مقارنة العناوين والمواقف وتنوع الناشرين عبر فترة زمنية |
 
-ابدأ من [واجهة البحث](https://erx-mcp.zad.tools/explore) دون حساب. ويمكن للمطورين
+ابدأ من [واجهة البحث](https://egypt-research.marsaplatform.com/explore) دون حساب. ويمكن للمطورين
 ووكلاء الذكاء الاصطناعي استخدام طبقة MCP وREST نفسها بعد ذلك — مع
 [مكتبتَي عميل Python وTypeScript](clients/)، و[دليل الاستخدام](docs/USAGE.md)،
 ومعرّفات استشهاد ثابتة وأمر `dataset-dump` لتصدير نسخة أرشيف قابلة للاستشهاد.
@@ -59,29 +59,74 @@ ERX ليس وسيلة إعلام ولا يقرر صحة الادعاء نياب�
 
 ## ابدأ خلال دقيقة
 
-نقطة MCP العامة:
+- **في المتصفح:** [واجهة البحث](https://egypt-research.marsaplatform.com/explore) مفتوحة دون حساب.
+- **لوكيلك الذكي (MCP) أو REST:** النسخة المستضافة تحتاج **مفتاحًا مجانيًا**: سجّل بريدك من
+  [صفحة البداية](https://egypt-research.marsaplatform.com/#signup)، وأنشئ مفتاحًا من لوحة المشترك
+  (يظهر مرة واحدة)، ثم أرسله في ترويسة `Authorization: Bearer <key>` (أو `X-API-Key`).
+  الخطة المجانية: 50,000 استدعاء شهريًا. التشغيل الذاتي لا يحتاج مفتاحًا.
+
+نقطة MCP المستضافة (Streamable HTTP):
 
 ```text
-https://erx-mcp.zad.tools/mcp
+https://egypt-research.marsaplatform.com/mcp
 ```
 
-مثال لعميل يدعم Streamable HTTP:
+**Claude Code**
+
+```bash
+claude mcp add --transport http egypt-research https://egypt-research.marsaplatform.com/mcp \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+**Cursor** (`~/.cursor/mcp.json`) و**VS Code** (`.vscode/mcp.json` مع `"servers"` و`"type": "http"`):
 
 ```json
 {
   "mcpServers": {
     "egypt-research": {
-      "url": "https://erx-mcp.zad.tools/mcp"
+      "url": "https://egypt-research.marsaplatform.com/mcp",
+      "headers": { "Authorization": "Bearer YOUR_API_KEY" }
     }
   }
 }
 ```
 
-أو شغّله محليًا عبر stdio:
+**Claude Desktop** (`claude_desktop_config.json`، عبر `mcp-remote`):
+
+```json
+{
+  "mcpServers": {
+    "egypt-research": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://egypt-research.marsaplatform.com/mcp",
+               "--header", "Authorization: Bearer YOUR_API_KEY"]
+    }
+  }
+}
+```
+
+أو شغّله محليًا عبر stdio دون مفتاح (Node.js 24 أو أحدث):
 
 ```bash
 npx -y egypt-research-mcp serve --transport stdio
 ```
+
+جرّب أن تسأل وكيلك: «تتبّع تغطية قرار رفع أسعار الوقود خلال الشهر الماضي مع المصادر»، أو
+«قارن كيف تناولت المصادر الرسمية والصحفية قانون العمل الجديد، وصدّر المراجع بصيغة BibTeX».
+
+### English quick start
+
+ERX (Egypt Research Commons) is a source-grounded research archive and MCP server for Egyptian
+public affairs: 35 operational sources, 21 read-only `egypt_*` MCP tools, and every result tied to
+its original URL, publisher and dates.
+
+- **Web search:** <https://egypt-research.marsaplatform.com/explore> — open, no account.
+- **Hosted MCP:** `https://egypt-research.marsaplatform.com/mcp` and REST `…/api/v1` need a
+  **free API key** (sign up at <https://egypt-research.marsaplatform.com/#signup>, create a key in
+  the dashboard, send `Authorization: Bearer <key>`). Free plan: 50,000 calls/month.
+- **Self-hosted (no key):** `npx -y egypt-research-mcp serve --transport stdio` (Node ≥ 24).
+- Connect snippets for Claude Code, Claude Desktop, Cursor and VS Code are above and in
+  [docs/USAGE.md](docs/USAGE.md). Health: `/health` · status: `/status.html` · API docs: `/docs`.
 
 ## السطوح المتاحة
 
@@ -218,6 +263,16 @@ npm run release:check
 - تجميع القصص تشابه نصي مساعد، وليس حكمًا تحريريًا.
 - الرابط الأصلي يظل المرجع النهائي.
 - الكود مرخص MIT؛ حقوق المواد المفهرسة تبقى لأصحابها.
+
+## مشاريع مرسى الشقيقة · Sibling Marsa projects
+
+| المشروع | ما هو | الرابط |
+|---|---|---|
+| **Atlas MCP · أطلس** | معلومات الخدمات والإحالة للهجرة واللجوء في مصر بمصادرها · service & referral information for migration and asylum in Egypt | MCP: <https://atlas.marsaplatform.com/mcp> · [GitHub](https://github.com/marsaplatform/atlas-mcp) |
+| **Malja MCP · ملجأ** | بيانات إنسانية موثّقة (UNHCR، البنك الدولي، HDX، ReliefWeb) · trusted humanitarian open data | <https://spaces.marsaplatform.com/s/k3sb9ww3dj/> |
+| **Marsa Spaces · مساحات مرسى** | نشر صفحات ثابتة بروابط عامة، مع خادم MCP لكل مساحة · static publishing with a per-space MCP server | <https://spaces.marsaplatform.com> · [GitHub](https://github.com/marsaplatform/marsa) |
+
+كل المشاريع من [مرسى](https://marsaplatform.com/products). · All projects: <https://marsaplatform.com/products>.
 
 ## الهوية والمساهمة
 

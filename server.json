@@ -3,8 +3,8 @@
   "name": "io.github.ahmedvnabil/egypt-research",
   "title": "Egypt Research Commons",
   "description": "Source-grounded research for Egyptian public affairs",
-  "version": "1.2.0",
-  "websiteUrl": "https://erx-mcp.zad.tools",
+  "version": "1.2.1",
+  "websiteUrl": "https://egypt-research.marsaplatform.com",
   "repository": {
     "id": "1300883187",
     "url": "https://github.com/marsaplatform/erx-mcp",
@@ -13,14 +13,22 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://erx-mcp.zad.tools/mcp"
+      "url": "https://egypt-research.marsaplatform.com/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer <free API key from https://egypt-research.marsaplatform.com/#signup>",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
     }
   ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "egypt-research-mcp",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "transport": {
         "type": "stdio"
       }
