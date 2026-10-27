@@ -54,6 +54,21 @@ class ErxError(RuntimeError):
         super().__init__(f"ERX request to {url} failed with status {status}: {body}")
 
 
+class _CredentialSafeRedirect(urllib.request.HTTPRedirectHandler):
+    """Never forward the hosted API credential to another origin."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected is not None:
+            def origin(url):
+                parts = urllib.parse.urlsplit(url)
+                return (parts.scheme.lower(), parts.hostname,
+                        parts.port or (443 if parts.scheme.lower() == "https" else 80))
+            if origin(req.full_url) != origin(newurl):
+                redirected.remove_header("Authorization")
+        return redirected
+
+
 @dataclass
 class ErxClient:
     """Thin client for the ERX REST API.
@@ -69,7 +84,8 @@ class ErxClient:
     timeout: float = 30.0
     api_key: Optional[str] = field(default_factory=lambda: os.environ.get("ERX_API_KEY"), repr=False)
     _opener: urllib.request.OpenerDirector = field(
-        default_factory=urllib.request.build_opener, repr=False, compare=False
+        default_factory=lambda: urllib.request.build_opener(_CredentialSafeRedirect()),
+        repr=False, compare=False
     )
 
     def __post_init__(self) -> None:
