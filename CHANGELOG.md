@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 — 2026-10-28
+
+- Prevent Python client bearer credentials from being forwarded across origins, ports or HTTPS downgrades during redirects; retain authentication only on same-origin redirects.
+- Add credential-boundary regression tests to CI.
+
+
 ## 1.2.1 — 2026-10-28
 
 - Update the hosted endpoint to egypt-research.marsaplatform.com and document free API-key authentication.

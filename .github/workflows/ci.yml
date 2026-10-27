@@ -20,6 +20,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
+      - name: Python client credential boundaries
+        run: python3 -m unittest discover -s clients/python -p 'test_*.py'
       - run: node --test scripts/container-release.check.mjs
       - run: npm run check
       - run: npm run test:coverage
